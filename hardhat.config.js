@@ -4,6 +4,7 @@
 
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
+require("@nomiclabs/hardhat-web3");
 
 module.exports = {
   solidity: {
