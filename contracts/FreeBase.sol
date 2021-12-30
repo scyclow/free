@@ -11,12 +11,12 @@ pragma solidity ^0.8.11;
 contract Free is ERC721, ERC721Burnable, Ownable {
   using Strings for uint256;
   uint256 private _tokenIdCounter;
-  uint256 private _seriesIdCounter;
+  uint256 private _collectionIdCounter;
 
   string constant public license = 'CC0';
 
   struct Metadata {
-    uint256 seriesId;
+    uint256 collectionId;
     string namePrefix;
     string externalUrl;
     string imgUrl;
@@ -24,11 +24,11 @@ contract Free is ERC721, ERC721Burnable, Ownable {
     string description;
   }
 
-  mapping(uint256 => Metadata) public seriesIdToMetadata;
-  mapping(uint256 => uint256) public tokenIdToSeriesId;
-  mapping(uint256 => uint256) public tokenIdToSeriesCount;
-  mapping(uint256 => address) public seriesIdToMinter;
-  mapping(uint256 => uint256) public seriesSupply;
+  mapping(uint256 => Metadata) public collectionIdToMetadata;
+  mapping(uint256 => uint256) public tokenIdToCollectionId;
+  mapping(uint256 => uint256) public tokenIdToCollectionCount;
+  mapping(uint256 => address) public collectionIdToMinter;
+  mapping(uint256 => uint256) public collectionSupply;
   mapping(uint256 => string) public tokenIdToAttributes;
   mapping(address => bool) attributeUpdateAllowList;
 
@@ -38,14 +38,14 @@ contract Free is ERC721, ERC721Burnable, Ownable {
 
   constructor() ERC721('Free', 'FREE') {
     _tokenIdCounter = 0;
-    _seriesIdCounter = 0;
+    _collectionIdCounter = 0;
   }
 
   function totalSupply() public view virtual returns (uint256) {
     return _tokenIdCounter;
   }
 
-  function createSeries(
+  function createCollection(
     address minter,
     string calldata _namePrefix,
     string calldata _externalUrl,
@@ -53,28 +53,28 @@ contract Free is ERC721, ERC721Burnable, Ownable {
     string calldata _imgExtension,
     string calldata _description
   ) public onlyOwner {
-    seriesIdToMinter[_seriesIdCounter] = minter;
+    collectionIdToMinter[_collectionIdCounter] = minter;
     attributeUpdateAllowList[minter] = true;
 
-    Metadata storage metadata = seriesIdToMetadata[_seriesIdCounter];
+    Metadata storage metadata = collectionIdToMetadata[_collectionIdCounter];
     metadata.namePrefix = _namePrefix;
     metadata.externalUrl = _externalUrl;
     metadata.imgUrl = _imgUrl;
     metadata.imgExtension = _imgExtension;
     metadata.description = _description;
 
-    _seriesIdCounter++;
+    _collectionIdCounter++;
   }
 
-  function mint(uint256 seriesId, address to) public {
-    require(seriesIdToMinter[seriesId] == _msgSender(), 'Caller is not the minting address');
-    require(seriesId < _seriesIdCounter, 'Series ID does not exist');
+  function mint(uint256 collectionId, address to) public {
+    require(collectionIdToMinter[collectionId] == _msgSender(), 'Caller is not the minting address');
+    require(collectionId < _collectionIdCounter, 'Collection ID does not exist');
 
     _mint(to, _tokenIdCounter);
-    tokenIdToSeriesId[_tokenIdCounter] = seriesId;
+    tokenIdToCollectionId[_tokenIdCounter] = collectionId;
 
-    tokenIdToSeriesCount[_tokenIdCounter] = seriesSupply[seriesId];
-    seriesSupply[seriesId]++;
+    tokenIdToCollectionCount[_tokenIdCounter] = collectionSupply[collectionId];
+    collectionSupply[collectionId]++;
     _tokenIdCounter++;
   }
 
@@ -89,35 +89,35 @@ contract Free is ERC721, ERC721Burnable, Ownable {
   }
 
 
-  function setMintingAddress(uint256 seriesId, address minter) public onlyOwner {
-    require(seriesId < _seriesIdCounter, 'Series ID does not exist');
+  function setMintingAddress(uint256 collectionId, address minter) public onlyOwner {
+    require(collectionId < _collectionIdCounter, 'Collection ID does not exist');
 
-    address existingMinter = seriesIdToMinter[seriesId];
+    address existingMinter = collectionIdToMinter[collectionId];
     attributeUpdateAllowList[existingMinter] = false;
     attributeUpdateAllowList[minter] = true;
-    seriesIdToMinter[seriesId] = minter;
+    collectionIdToMinter[collectionId] = minter;
   }
 
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
     require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
 
-    Metadata memory metadata = seriesIdToMetadata[tokenIdToSeriesId[tokenId]];
+    Metadata memory metadata = collectionIdToMetadata[tokenIdToCollectionId[tokenId]];
     string memory tokenIdString = tokenId.toString();
-    string memory seriesIdString = tokenIdToSeriesId[tokenId].toString();
-    string memory seriesCountString = tokenIdToSeriesCount[tokenId].toString();
+    string memory collectionIdString = tokenIdToCollectionId[tokenId].toString();
+    string memory collectionCountString = tokenIdToCollectionCount[tokenId].toString();
     string memory tokenAttributes = tokenIdToAttributes[tokenId];
 
     string memory json = Base64.encode(
       bytes(
         string(
           abi.encodePacked(
-            '{"name": "', metadata.namePrefix, seriesCountString,
+            '{"name": "', metadata.namePrefix, collectionCountString,
             '", "description": "', metadata.description,
             '", "license": "', license,
             '", "image": "', metadata.imgUrl, metadata.imgExtension,
-            '", "external_url": "', metadata.externalUrl, '?seriesId=', seriesIdString, '&tokenId=', tokenIdString,
-            '", "attributes": [{"trait_type":"series", "value":"', seriesIdString,'"}', tokenAttributes, ']}'
+            '", "external_url": "', metadata.externalUrl, '?collectionId=', collectionIdString, '&tokenId=', tokenIdString,
+            '", "attributes": [{"trait_type":"collection", "value":"', collectionIdString,'"}', tokenAttributes, ']}'
           )
         )
       )
@@ -128,14 +128,14 @@ contract Free is ERC721, ERC721Burnable, Ownable {
 
 
   function updateMetadataParams(
-    uint256 seriesId,
+    uint256 collectionId,
     string calldata _namePrefix,
     string calldata _externalUrl,
     string calldata _imgUrl,
     string calldata _imgExtension,
     string calldata _description
   ) public onlyOwner {
-    Metadata storage metadata = seriesIdToMetadata[seriesId];
+    Metadata storage metadata = collectionIdToMetadata[collectionId];
 
     metadata.namePrefix = _namePrefix;
     metadata.externalUrl = _externalUrl;

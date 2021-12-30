@@ -5,14 +5,14 @@ import "hardhat/console.sol";
 
  
 interface IFree {
-  function mint(uint256 seriesId, address to) external;
+  function mint(uint256 collectionId, address to) external;
   function ownerOf(uint256 tokenId) external returns (address owner);
-  function tokenIdToSeriesId(uint256 tokenId) external returns (uint256 seriesId);
+  function tokenIdToCollectionId(uint256 tokenId) external returns (uint256 collectionId);
   function appendAttributeToToken(uint256 tokenId, string memory attrKey, string memory attrValue) external;
 }
 
 
-contract Series3 {
+contract Free3 {
   IFree free;
 
   struct Stake {
@@ -23,7 +23,7 @@ contract Series3 {
   }
 
   mapping(address => Stake) public addressToStakes;
-  mapping(uint256 => bool) public series0UsedForSeries3Mint;
+  mapping(uint256 => bool) public free0UsedForFree3Mint;
 
   address public administrator;
   uint256 public stakePeriod;
@@ -44,8 +44,6 @@ contract Series3 {
   function transferAdministratorship(address newAdministrator) public onlyAdmin {
     administrator = newAdministrator;
   }
-
-
 
   function firstStake() public payable {
     Stake storage stake = addressToStakes[msg.sender];
@@ -97,11 +95,11 @@ contract Series3 {
       'You must wait between 5000 and 5100 blocks to claim'
     );
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0 token');
-    require(free.tokenIdToSeriesId(free0TokenId) == 0, 'You must use a Free0 as a mint pass');
-    require(!series0UsedForSeries3Mint[free0TokenId], 'Free0 already used to mint Free3');
+    require(free.tokenIdToCollectionId(free0TokenId) == 0, 'You must use a Free0 as a mint pass');
+    require(!free0UsedForFree3Mint[free0TokenId], 'Free0 already used to mint Free3');
     free.appendAttributeToToken(free0TokenId, 'Used For Free3 Mint', 'true');
 
-    series0UsedForSeries3Mint[free0TokenId] = true;
+    free0UsedForFree3Mint[free0TokenId] = true;
     stake.mintBlockNumber = block.number;
 
     free.mint(3, msg.sender);
