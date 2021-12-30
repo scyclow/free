@@ -479,33 +479,33 @@ library Strings {
     /**
      * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation.
      */
-    function toHexString(uint256 value) internal pure returns (string memory) {
-        if (value == 0) {
-            return "0x00";
-        }
-        uint256 temp = value;
-        uint256 length = 0;
-        while (temp != 0) {
-            length++;
-            temp >>= 8;
-        }
-        return toHexString(value, length);
-    }
+    // function toHexString(uint256 value) internal pure returns (string memory) {
+    //     if (value == 0) {
+    //         return "0x00";
+    //     }
+    //     uint256 temp = value;
+    //     uint256 length = 0;
+    //     while (temp != 0) {
+    //         length++;
+    //         temp >>= 8;
+    //     }
+    //     return toHexString(value, length);
+    // }
 
     /**
      * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation with fixed length.
      */
-    function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
-        bytes memory buffer = new bytes(2 * length + 2);
-        buffer[0] = "0";
-        buffer[1] = "x";
-        for (uint256 i = 2 * length + 1; i > 1; --i) {
-            buffer[i] = _HEX_SYMBOLS[value & 0xf];
-            value >>= 4;
-        }
-        require(value == 0, "Strings: hex length insufficient");
-        return string(buffer);
-    }
+    // function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
+    //     bytes memory buffer = new bytes(2 * length + 2);
+    //     buffer[0] = "0";
+    //     buffer[1] = "x";
+    //     for (uint256 i = 2 * length + 1; i > 1; --i) {
+    //         buffer[i] = _HEX_SYMBOLS[value & 0xf];
+    //         value >>= 4;
+    //     }
+    //     require(value == 0, "Strings: hex length insufficient");
+    //     return string(buffer);
+    // }
 }
 
 
@@ -903,25 +903,25 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      *
      * Emits a {Transfer} event.
      */
-    function _safeMint(address to, uint256 tokenId) internal virtual {
-        _safeMint(to, tokenId, "");
-    }
+    // function _safeMint(address to, uint256 tokenId) internal virtual {
+    //     _safeMint(to, tokenId, "");
+    // }
 
     /**
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
-    function _safeMint(
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) internal virtual {
-        _mint(to, tokenId);
-        require(
-            _checkOnERC721Received(address(0), to, tokenId, _data),
-            "ERC721: transfer to non ERC721Receiver implementer"
-        );
-    }
+    // function _safeMint(
+    //     address to,
+    //     uint256 tokenId,
+    //     bytes memory _data
+    // ) internal virtual {
+    //     _mint(to, tokenId);
+    //     require(
+    //         _checkOnERC721Received(address(0), to, tokenId, _data),
+    //         "ERC721: transfer to non ERC721Receiver implementer"
+    //     );
+    // }
 
     /**
      * @dev Mints `tokenId` and transfers it to `to`.
@@ -939,7 +939,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
 
-        _beforeTokenTransfer(address(0), to, tokenId);
+        // _beforeTokenTransfer(address(0), to, tokenId);
 
         _balances[to] += 1;
         _owners[tokenId] = to;
@@ -960,7 +960,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     function _burn(uint256 tokenId) internal virtual {
         address owner = ERC721.ownerOf(tokenId);
 
-        _beforeTokenTransfer(owner, address(0), tokenId);
+        // _beforeTokenTransfer(owner, address(0), tokenId);
 
         // Clear approvals
         _approve(address(0), tokenId);
@@ -990,7 +990,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
         require(to != address(0), "ERC721: transfer to the zero address");
 
-        _beforeTokenTransfer(from, to, tokenId);
+        // _beforeTokenTransfer(from, to, tokenId);
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId);
@@ -1059,32 +1059,15 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual {}
+    // function _beforeTokenTransfer(
+    //     address from,
+    //     address to,
+    //     uint256 tokenId
+    // ) internal virtual {}
 }
 
 
-/**
- * @title ERC721 Burnable Token
- * @dev ERC721 Token that can be irreversibly burned (destroyed).
- */
-abstract contract ERC721Burnable is Context, ERC721 {
-    /**
-     * @dev Burns `tokenId`. See {ERC721-_burn}.
-     *
-     * Requirements:
-     *
-     * - The caller must own `tokenId` or be an approved operator.
-     */
-    function burn(uint256 tokenId) public virtual {
-        //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721Burnable: caller is not owner nor approved");
-        _burn(tokenId);
-    }
-}
+
 
 
 

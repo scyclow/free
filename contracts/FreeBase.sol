@@ -8,7 +8,7 @@ import "./Dependencies.sol";
 pragma solidity ^0.8.11;
 
 
-contract Free is ERC721, ERC721Burnable, Ownable {
+contract Free is ERC721, Ownable {
   using Strings for uint256;
   uint256 private _tokenIdCounter;
   uint256 private _collectionIdCounter;
@@ -117,7 +117,7 @@ contract Free is ERC721, ERC721Burnable, Ownable {
             '", "license": "', license,
             '", "image": "', metadata.imgUrl, metadata.imgExtension,
             '", "external_url": "', metadata.externalUrl, '?collectionId=', collectionIdString, '&tokenId=', tokenIdString,
-            '", "attributes": [{"trait_type":"collection", "value":"', collectionIdString,'"}', tokenAttributes, ']}'
+            '", "attributes": [{"trait_type":"Collection", "value":"', collectionIdString,'"}', tokenAttributes, ']}'
           )
         )
       )

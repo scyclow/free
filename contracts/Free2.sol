@@ -20,7 +20,7 @@ interface IIOU {
 }
 
 interface IFree1 {
-  function free0UsedForFree1Mint(uint256 tokenId) external returns (bool used);
+  function free0TokenIdUsed(uint256 tokenId) external returns (bool used);
 }
 
 contract Free2 {
@@ -30,7 +30,7 @@ contract Free2 {
   IIOU iouContract;
 
   mapping (uint256 => bool) public usedIOUs;
-  mapping(uint256 => bool) public free0UsedForFree2Mint;
+  mapping(uint256 => bool) public free0TokenIdUsed;
 
   constructor(address freeAddr, address free1Addr, address iouAddr, address nvcMinterAddr) {
     free = IFree(freeAddr);
@@ -40,22 +40,23 @@ contract Free2 {
   }
 
   function claim(uint256 iouId, uint256 free0TokenId) public {
-    require(iouContract.ownerOf(iouId) == msg.sender, "You must be the owner of this IOU");
-    require(nvcMinter.usedIOUs(iouId), 'This IOU was not used to mint a NVC');
-    require(!usedIOUs[iouId], 'This IOU has already minted a FREE');
+    require(iouContract.ownerOf(iouId) == msg.sender, 'You must be the owner of this IOU');
+    require(nvcMinter.usedIOUs(iouId), 'You must use an IOU that has minted a NVC');
+    require(!usedIOUs[iouId], 'This IOU has already minted a Free2');
 
-    require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0 token');
+    require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
+    require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
     require(
-      free.tokenIdToCollectionId(free0TokenId) == 0
-      && free1Contract.free0UsedForFree1Mint(free0TokenId) == true,
-      'You must use a Free0 that has already been used to mint a Free1 as a mint pass'
+      free1Contract.free0TokenIdUsed(free0TokenId) == true,
+      'You must use a Free0 that has already minted a Free1'
+
     );
-    require(!free0UsedForFree2Mint[free0TokenId], 'Free0 already used to mint Free2');
+    require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free2');
     free.appendAttributeToToken(free0TokenId, 'Used For Free2 Mint', 'true');
 
 
     usedIOUs[iouId] = true;
-    free0UsedForFree2Mint[free0TokenId] = true;
+    free0TokenIdUsed[free0TokenId] = true;
 
     free.mint(2, msg.sender);
   }

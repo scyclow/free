@@ -15,7 +15,7 @@ contract Free4 {
   address minter;
   address target;
 
-  mapping(uint256 => bool) public free0UsedForFree4Mint;
+  mapping(uint256 => bool) public free0TokenIdUsed;
 
   constructor(address freeAddr, address minterAddr, address targetAddr) {
     free = IFree(freeAddr);
@@ -26,11 +26,11 @@ contract Free4 {
   function claim(uint256 free0TokenId) public {
     require(msg.sender == minter, 'Only the minter can mint');
 
-    require(free.tokenIdToCollectionId(free0TokenId) == 0, 'You must use a Free0 as a mint pass');
-    require(!free0UsedForFree4Mint[free0TokenId], 'Free0 already used to mint Free4');
-    require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0 token');
+    require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
+    require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free4');
+    require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    free0UsedForFree4Mint[free0TokenId] = true;
+    free0TokenIdUsed[free0TokenId] = true;
     free.appendAttributeToToken(free0TokenId, 'Used For Free4 Mint', 'true');
     free.mint(4, target);
   }

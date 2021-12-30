@@ -16,7 +16,7 @@ const uint = n => Number(n)
 const parseMetadata = metadata => JSON.parse(Buffer.from(metadata.split(',')[1], 'base64').toString('utf-8'))
 
 
-describe('Base Free Contract', () => {
+xdescribe('Base Free Contract', () => {
   it('minting should work', async () => {
     const [
       _, __,
@@ -24,49 +24,49 @@ describe('Base Free Contract', () => {
       owner2,
       ...signers
     ] = await ethers.getSigners()
-    const FreeFactory = await ethers.getContractFactory('Free', owner1)
-    const Free = await FreeFactory.deploy()
-    await Free.deployed()
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner1)
+    const FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
 
     const Free0Factory = await ethers.getContractFactory('Free0', owner1)
-    const Free0 = await Free0Factory.deploy(Free.address)
+    const Free0 = await Free0Factory.deploy(FreeBase.address)
     await Free0.deployed()
 
 
-    await Free.connect(owner1).createCollection(owner1.address, '', '', '', '', '')
-    await Free.connect(owner1).createCollection(owner2.address, '', '', '', '', '')
+    await FreeBase.connect(owner1).createCollection(owner1.address, '', '', '', '', '')
+    await FreeBase.connect(owner1).createCollection(owner2.address, '', '', '', '', '')
 
-    await Free.connect(owner1).mint(0, owner1.address)
-    await Free.connect(owner1).mint(0, owner1.address)
-    await Free.connect(owner2).mint(1, owner1.address)
+    await FreeBase.connect(owner1).mint(0, owner1.address)
+    await FreeBase.connect(owner1).mint(0, owner1.address)
+    await FreeBase.connect(owner2).mint(1, owner1.address)
 
     await expectFailure(() =>
-      Free.connect(owner2).mint(0, owner2.address),
+      FreeBase.connect(owner2).mint(0, owner2.address),
       'Caller is not the minting address'
     )
 
     await expectFailure(() =>
-      Free.connect(owner1).mint(1, owner1.address),
+      FreeBase.connect(owner1).mint(1, owner1.address),
       'Caller is not the minting address'
     )
 
 
-    await Free.connect(owner1).setMintingAddress(0, Free0.address)
+    await FreeBase.connect(owner1).setMintingAddress(0, Free0.address)
     await Free0.connect(owner1).claim()
     await Free0.connect(owner2).claim()
 
     await expectFailure(() =>
-      Free.connect(owner1).mint(0, owner1.address),
+      FreeBase.connect(owner1).mint(0, owner1.address),
       'Caller is not the minting address'
     )
 
-    expect(await Free.connect(owner1).tokenIdToCollectionId(0)).to.equal(0)
-    expect(await Free.connect(owner1).tokenIdToCollectionId(1)).to.equal(0)
-    expect(await Free.connect(owner1).tokenIdToCollectionId(2)).to.equal(1)
+    expect(await FreeBase.connect(owner1).tokenIdToCollectionId(0)).to.equal(0)
+    expect(await FreeBase.connect(owner1).tokenIdToCollectionId(1)).to.equal(0)
+    expect(await FreeBase.connect(owner1).tokenIdToCollectionId(2)).to.equal(1)
 
-    expect(await Free.connect(owner1).tokenIdToCollectionCount(0)).to.equal(0)
-    expect(await Free.connect(owner1).tokenIdToCollectionCount(1)).to.equal(1)
-    expect(await Free.connect(owner1).tokenIdToCollectionCount(2)).to.equal(0)
+    expect(await FreeBase.connect(owner1).tokenIdToCollectionCount(0)).to.equal(0)
+    expect(await FreeBase.connect(owner1).tokenIdToCollectionCount(1)).to.equal(1)
+    expect(await FreeBase.connect(owner1).tokenIdToCollectionCount(2)).to.equal(0)
 
   })
 
@@ -78,112 +78,112 @@ describe('Base Free Contract', () => {
       minter,
       ...signers
     ] = await ethers.getSigners()
-    const FreeFactory = await ethers.getContractFactory('Free', owner1)
-    const Free = await FreeFactory.deploy()
-    await Free.deployed()
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner1)
+    const FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
 
     const Free0Factory = await ethers.getContractFactory('Free0', owner1)
-    const Free0 = await Free0Factory.deploy(Free.address)
+    const Free0 = await Free0Factory.deploy(FreeBase.address)
     await Free0.deployed()
 
 
-    await Free.connect(owner1).createCollection(owner1.address, 'Free0 #', 'website.com', 'ipfs://afadsf', '.jpg', 'if its free its for me')
-    await Free.connect(owner1).createCollection(owner1.address, 'Free1 #', 'website.com', 'ipfs://afadsf', '.jpg', 'free for all')
-    await Free.connect(owner1).mint(0, owner1.address)
-    await Free.connect(owner1).mint(0, owner1.address)
-    await Free.connect(owner1).mint(1, owner1.address)
+    await FreeBase.connect(owner1).createCollection(owner1.address, 'Free0 #', 'website.com', 'ipfs://afadsf', '.jpg', 'if its free its for me')
+    await FreeBase.connect(owner1).createCollection(owner1.address, 'Free1 #', 'website.com', 'ipfs://afadsf', '.jpg', 'free for all')
+    await FreeBase.connect(owner1).mint(0, owner1.address)
+    await FreeBase.connect(owner1).mint(0, owner1.address)
+    await FreeBase.connect(owner1).mint(1, owner1.address)
 
 
 
-    const metadata0 = await Free.connect(owner1).tokenURI(0)
+    const metadata0 = await FreeBase.connect(owner1).tokenURI(0)
     expect(parseMetadata(metadata0)).to.deep.equal({
       name: 'Free0 #0',
       description: 'if its free its for me',
       license: 'CC0',
       image: 'ipfs://afadsf.jpg',
       external_url: 'website.com?collectionId=0&tokenId=0',
-      attributes: [ { trait_type: 'collection', value: '0' } ]
+      attributes: [ { trait_type: 'Collection', value: '0' } ]
     })
 
-    const metadata1 = await Free.connect(owner1).tokenURI(1)
+    const metadata1 = await FreeBase.connect(owner1).tokenURI(1)
     expect(parseMetadata(metadata1)).to.deep.equal({
       name: 'Free0 #1',
       description: 'if its free its for me',
       license: 'CC0',
       image: 'ipfs://afadsf.jpg',
       external_url: 'website.com?collectionId=0&tokenId=1',
-      attributes: [ { trait_type: 'collection', value: '0' } ]
+      attributes: [ { trait_type: 'Collection', value: '0' } ]
     })
 
-    const metadata2 = await Free.connect(owner1).tokenURI(2)
+    const metadata2 = await FreeBase.connect(owner1).tokenURI(2)
     expect(parseMetadata(metadata2)).to.deep.equal({
       name: 'Free1 #0',
       description: 'free for all',
       license: 'CC0',
       image: 'ipfs://afadsf.jpg',
       external_url: 'website.com?collectionId=1&tokenId=2',
-      attributes: [ { trait_type: 'collection', value: '1' } ]
+      attributes: [ { trait_type: 'Collection', value: '1' } ]
     })
 
 
 
-    await Free.connect(owner1).updateMetadataParams(0, 'renamed ', 'new.website', 'arweave://123', '.png', 'free as in beer')
-    // console.log(await Free.connect(owner1).seriesIdToMetadata(0))
+    await FreeBase.connect(owner1).updateMetadataParams(0, 'renamed ', 'new.website', 'arweave://123', '.png', 'free as in beer')
+    // console.log(await FreeBase.connect(owner1).seriesIdToMetadata(0))
 
-    const metadata0_1 = await Free.connect(owner1).tokenURI(0)
+    const metadata0_1 = await FreeBase.connect(owner1).tokenURI(0)
     expect(parseMetadata(metadata0_1)).to.deep.equal({
       name: 'renamed 0',
       description: 'free as in beer',
       license: 'CC0',
       image: 'arweave://123.png',
       external_url: 'new.website?collectionId=0&tokenId=0',
-      attributes: [ { trait_type: 'collection', value: '0' } ]
+      attributes: [ { trait_type: 'Collection', value: '0' } ]
     })
 
-    const metadata1_1 = await Free.connect(owner1).tokenURI(1)
+    const metadata1_1 = await FreeBase.connect(owner1).tokenURI(1)
     expect(parseMetadata(metadata1_1)).to.deep.equal({
       name: 'renamed 1',
       description: 'free as in beer',
       license: 'CC0',
       image: 'arweave://123.png',
       external_url: 'new.website?collectionId=0&tokenId=1',
-      attributes: [ { trait_type: 'collection', value: '0' } ]
+      attributes: [ { trait_type: 'Collection', value: '0' } ]
     })
 
     await expectFailure(() =>
-      Free.connect(owner2).updateMetadataParams(0, 'renamed ', 'new.website', 'arweave://123', '.png', 'free as in beer'),
+      FreeBase.connect(owner2).updateMetadataParams(0, 'renamed ', 'new.website', 'arweave://123', '.png', 'free as in beer'),
       'Ownable:'
     )
 
-    await Free.connect(owner1).setMintingAddress(0, minter.address)
+    await FreeBase.connect(owner1).setMintingAddress(0, minter.address)
 
-    await Free.connect(minter).appendAttributeToToken(0, 'likes beer', 'true')
+    await FreeBase.connect(minter).appendAttributeToToken(0, 'likes beer', 'true')
 
-    const metadata0_2 = await Free.connect(owner1).tokenURI(0)
+    const metadata0_2 = await FreeBase.connect(owner1).tokenURI(0)
     expect(parseMetadata(metadata0_2)).to.deep.equal({
       name: 'renamed 0',
       description: 'free as in beer',
       license: 'CC0',
       image: 'arweave://123.png',
       external_url: 'new.website?collectionId=0&tokenId=0',
-      attributes: [ { trait_type: 'collection', value: '0' },  { trait_type: 'likes beer', value: true }]
+      attributes: [ { trait_type: 'Collection', value: '0' },  { trait_type: 'likes beer', value: true }]
     })
 
-    const metadata1_2 = await Free.connect(owner1).tokenURI(1)
+    const metadata1_2 = await FreeBase.connect(owner1).tokenURI(1)
     expect(parseMetadata(metadata1_2)).to.deep.equal({
       name: 'renamed 1',
       description: 'free as in beer',
       license: 'CC0',
       image: 'arweave://123.png',
       external_url: 'new.website?collectionId=0&tokenId=1',
-      attributes: [ { trait_type: 'collection', value: '0' } ]
+      attributes: [ { trait_type: 'Collection', value: '0' } ]
     })
   })
 })
 
-describe('Collection 1', function () {
+xdescribe('Free1', function () {
   this.timeout(40000)
-  let owner, minter, notMinter, Free, Free0, Free1
+  let owner, minter, notMinter, FreeBase, Free0, Free1
 
   beforeEach(async () => {
     const signers = await ethers.getSigners()
@@ -191,42 +191,42 @@ describe('Collection 1', function () {
     minter = signers[3]
     notMinter = signers[4]
 
-    const FreeFactory = await ethers.getContractFactory('Free', owner)
-    Free = await FreeFactory.deploy()
-    await Free.deployed()
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+    FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
 
     const Free0Factory = await ethers.getContractFactory('Free0', owner)
-    Free0 = await Free0Factory.deploy(Free.address)
+    Free0 = await Free0Factory.deploy(FreeBase.address)
     await Free0.deployed()
 
     const Free1Factory = await ethers.getContractFactory('Free1', owner)
-    Free1 = await Free1Factory.deploy(Free.address)
+    Free1 = await Free1Factory.deploy(FreeBase.address)
     await Free1.deployed()
 
 
-    await Free.connect(owner).createCollection(Free0.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(Free1.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free1.address, '', '', '', '', '')
   })
 
   it('can claim', async () => {
     await Free0.connect(minter).claim()
     await Free1.connect(minter).claim(0)
 
-    await expectFailure(() => Free1.connect(minter).claim(0), 'Free0 already used to mint Free1')
-    await expectFailure(() => Free1.connect(minter).claim(1), 'You must use a Free0 as a mint pass')
+    await expectFailure(() => Free1.connect(minter).claim(0), 'This Free0 has already been used to mint a Free1')
+    await expectFailure(() => Free1.connect(minter).claim(1), 'Invalid Free0')
 
     await Free0.connect(minter).claim()
-    await expectFailure(() => Free1.connect(notMinter).claim(2), 'You must be the owner of this Free0 token')
+    await expectFailure(() => Free1.connect(notMinter).claim(2), 'You must be the owner of this Free0')
     await Free1.connect(minter).claim(2)
 
-    expect(uint(await Free.connect(minter).collectionSupply(0))).to.equal(2)
-    expect(uint(await Free.connect(minter).collectionSupply(1))).to.equal(2)
+    expect(uint(await FreeBase.connect(minter).collectionSupply(0))).to.equal(2)
+    expect(uint(await FreeBase.connect(minter).collectionSupply(1))).to.equal(2)
 
-    expect(uint(await Free.connect(minter).tokenIdToCollectionId(0))).to.equal(0)
-    expect(uint(await Free.connect(minter).tokenIdToCollectionId(2))).to.equal(0)
+    expect(uint(await FreeBase.connect(minter).tokenIdToCollectionId(0))).to.equal(0)
+    expect(uint(await FreeBase.connect(minter).tokenIdToCollectionId(2))).to.equal(0)
 
-    expect(uint(await Free.connect(minter).tokenIdToCollectionId(1))).to.equal(1)
-    expect(uint(await Free.connect(minter).tokenIdToCollectionId(3))).to.equal(1)
+    expect(uint(await FreeBase.connect(minter).tokenIdToCollectionId(1))).to.equal(1)
+    expect(uint(await FreeBase.connect(minter).tokenIdToCollectionId(3))).to.equal(1)
   })
 
 
@@ -244,7 +244,7 @@ describe('Collection 1', function () {
     }
     await Promise.all(promises)
 
-    expect(uint(await Free.connect(minter).totalSupply())).to.equal(2000)
+    expect(uint(await FreeBase.connect(minter).totalSupply())).to.equal(2000)
 
     await Free0.connect(minter).claim()
     await expectFailure(() => Free1.connect(minter).claim(2000), 'Cannot mint more than 1000')
@@ -256,30 +256,30 @@ describe('Collection 1', function () {
     await Free0.connect(minter).claim()
     await Free1.connect(minter).claim(0)
 
-    const metadata0 = await Free.connect(owner).tokenURI(0)
+    const metadata0 = await FreeBase.connect(owner).tokenURI(0)
     expect(parseMetadata(metadata0)).to.deep.equal({
       name: '0',
       description: '',
       license: 'CC0',
       image: '',
       external_url: '?collectionId=0&tokenId=0',
-      attributes: [ { trait_type: 'collection', value: '0' },  { trait_type: 'Used For Free1 Mint', value: true }]
+      attributes: [ { trait_type: 'Collection', value: '0' },  { trait_type: 'Used For Free1 Mint', value: true }]
     })
 
-    const metadata1 = await Free.connect(owner).tokenURI(1)
+    const metadata1 = await FreeBase.connect(owner).tokenURI(1)
     expect(parseMetadata(metadata1)).to.deep.equal({
       name: '1',
       description: '',
       license: 'CC0',
       image: '',
       external_url: '?collectionId=0&tokenId=1',
-      attributes: [ { trait_type: 'collection', value: '0' } ]
+      attributes: [ { trait_type: 'Collection', value: '0' } ]
     })
   })
 })
 
-describe('Collection 2', () => {
-  let owner, minter, notMinter, Free, Free0, Free1, Free2, IOU, NVCMinter
+xdescribe('Free2', () => {
+  let owner, minter, notMinter, FreeBase, Free0, Free1, Free2, IOU, NVCMinter
 
   beforeEach(async () => {
     const signers = await ethers.getSigners()
@@ -304,26 +304,26 @@ describe('Collection 2', () => {
     await NVCMinter.connect(owner).__markUsed(1)
     await NVCMinter.connect(owner).__markUsed(2)
 
-    const FreeFactory = await ethers.getContractFactory('Free', owner)
-    Free = await FreeFactory.deploy()
-    await Free.deployed()
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+    FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
 
     const Free0Factory = await ethers.getContractFactory('Free0', owner)
-    Free0 = await Free0Factory.deploy(Free.address)
+    Free0 = await Free0Factory.deploy(FreeBase.address)
     await Free0.deployed()
 
     const Free1Factory = await ethers.getContractFactory('Free1', owner)
-    Free1 = await Free1Factory.deploy(Free.address)
+    Free1 = await Free1Factory.deploy(FreeBase.address)
     await Free1.deployed()
 
     const Free2Factory = await ethers.getContractFactory('Free2', owner)
-    Free2 = await Free2Factory.deploy(Free.address, Free1.address, IOU.address, NVCMinter.address)
+    Free2 = await Free2Factory.deploy(FreeBase.address, Free1.address, IOU.address, NVCMinter.address)
     await Free2.deployed()
 
 
-    await Free.connect(owner).createCollection(Free0.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(Free1.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(Free2.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free1.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free2.address, '', '', '', '', '')
   })
 
   it('can claim', async () => {
@@ -341,21 +341,21 @@ describe('Collection 2', () => {
 
 
 
-    await expectFailure(() => Free2.connect(notMinter).claim(2, 0), 'You must be the owner of this Free0 token')
-    await expectFailure(() => Free2.connect(minter).claim(0, 2), 'You must use a Free0 that has already been used to mint a Free1 as a mint pass')
-    await expectFailure(() => Free2.connect(minter).claim(0, 3), 'You must use a Free0 that has already been used to mint a Free1 as a mint pass')
+    await expectFailure(() => Free2.connect(notMinter).claim(2, 0), 'You must be the owner of this Free0')
+    await expectFailure(() => Free2.connect(minter).claim(0, 2), 'You must use a Free0 that has already minted a Free1')
+    await expectFailure(() => Free2.connect(minter).claim(0, 3), 'Invalid Free0')
     await Free2.connect(minter).claim(0, 0)
-    await expectFailure(() => Free2.connect(minter).claim(1, 0), 'Free0 already used to mint Free2')
+    await expectFailure(() => Free2.connect(minter).claim(1, 0), 'This Free0 has already been used to mint a Free2')
 
     await expectFailure(() => Free2.connect(notMinter).claim(0, 5), 'You must be the owner of this IOU')
-    await expectFailure(() => Free2.connect(minter).claim(3, 1), 'This IOU was not used to mint a NVC')
+    await expectFailure(() => Free2.connect(minter).claim(3, 1), 'You must use an IOU that has minted a NVC')
     await Free2.connect(minter).claim(1, 1)
-    await expectFailure(() => Free2.connect(minter).claim(1, 7), 'This IOU has already minted a FREE')
+    await expectFailure(() => Free2.connect(minter).claim(1, 7), 'This IOU has already minted a Free2')
 
     await Free2.connect(notMinter).claim(2, 5)
 
 
-    const metadata0 = await Free.connect(owner).tokenURI(0)
+    const metadata0 = await FreeBase.connect(owner).tokenURI(0)
     expect(parseMetadata(metadata0)).to.deep.equal({
       name: '0',
       description: '',
@@ -363,7 +363,7 @@ describe('Collection 2', () => {
       image: '',
       external_url: '?collectionId=0&tokenId=0',
       attributes: [
-        { trait_type: 'collection', value: '0' },
+        { trait_type: 'Collection', value: '0' },
         { trait_type: 'Used For Free1 Mint', value: true },
         { trait_type: 'Used For Free2 Mint', value: true }
       ]
@@ -372,8 +372,8 @@ describe('Collection 2', () => {
   })
 })
 
-describe('Free3', () => {
-  let owner, minter1, minter2, Free, Free0, Free3
+xdescribe('Free3', () => {
+  let owner, minter1, minter2, FreeBase, Free0, Free3
 
   const stakeValue = ethers.utils.parseEther('0.25')
   const payableEth = { value: stakeValue }
@@ -389,22 +389,22 @@ describe('Free3', () => {
     minter1 = signers[3]
     minter2 = signers[4]
 
-    const FreeFactory = await ethers.getContractFactory('Free', owner)
-    Free = await FreeFactory.deploy()
-    await Free.deployed()
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+    FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
 
     const Free0Factory = await ethers.getContractFactory('Free0', owner)
-    Free0 = await Free0Factory.deploy(Free.address)
+    Free0 = await Free0Factory.deploy(FreeBase.address)
     await Free0.deployed()
 
     const Free3Factory = await ethers.getContractFactory('Free3', owner)
-    Free3 = await Free3Factory.deploy(Free.address, stakePeriod, progressPeriodExpiration)
+    Free3 = await Free3Factory.deploy(FreeBase.address, stakePeriod, progressPeriodExpiration)
     await Free3.deployed()
 
-    await Free.connect(owner).createCollection(Free0.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(owner.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(owner.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(Free3.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free3.address, '', '', '', '', '')
 
     await Free0.connect(minter1).claim() // 0
     await Free0.connect(minter1).claim() // 1
@@ -465,7 +465,7 @@ describe('Free3', () => {
       expect(endingEthBalance - startingEthBalance).to.be.closeTo(0.5, 0.01)
 
 
-      const metadata1 = await Free.connect(minter1).tokenURI(0)
+      const metadata1 = await FreeBase.connect(minter1).tokenURI(0)
       expect(parseMetadata(metadata1)).to.deep.equal({
         name: '0',
         description: '',
@@ -473,7 +473,7 @@ describe('Free3', () => {
         image: '',
         external_url: '?collectionId=0&tokenId=0',
         attributes: [
-          { trait_type: 'collection', value: '0' },
+          { trait_type: 'Collection', value: '0' },
           { trait_type: 'Used For Free3 Mint', value: true }
         ]
       })
@@ -491,7 +491,7 @@ describe('Free3', () => {
 
       await Free3.connect(minter1).claim(0)
 
-      await Free.connect(minter1).transferFrom(minter1.address, minter2.address, 0)
+      await FreeBase.connect(minter1).transferFrom(minter1.address, minter2.address, 0)
 
 
       await Free3.connect(minter2).firstStake(payableEth)
@@ -501,7 +501,7 @@ describe('Free3', () => {
       secondStakeStartingBlock = await getBlock()
       await setBlock(secondStakeStartingBlock + stakePeriod)
 
-      await expectFailure(() => Free3.connect(minter2).claim(0), 'Free0 already used to mint Free3')
+      await expectFailure(() => Free3.connect(minter2).claim(0), 'This Free0 has already been used to mint a Free3')
 
     })
     it('claim should not work with a Free > 0', async () => {
@@ -514,7 +514,7 @@ describe('Free3', () => {
 
       await Free3.connect(minter1).claim(0)
 
-      await Free.connect(minter1).transferFrom(minter1.address, minter2.address, 3)
+      await FreeBase.connect(minter1).transferFrom(minter1.address, minter2.address, 3)
 
 
       await Free3.connect(minter2).firstStake(payableEth)
@@ -524,7 +524,7 @@ describe('Free3', () => {
       secondStakeStartingBlock = await getBlock()
       await setBlock(secondStakeStartingBlock + stakePeriod)
 
-      await expectFailure(() => Free3.connect(minter2).claim(3), 'You must use a Free0 as a mint pass')
+      await expectFailure(() => Free3.connect(minter2).claim(3), 'Invalid Free0')
     })
 
     it('claim should not work with an unowned Free0', async () => {
@@ -535,8 +535,8 @@ describe('Free3', () => {
       const secondStakeStartingBlock = await getBlock()
       await setBlock(secondStakeStartingBlock + stakePeriod)
 
-      await Free.connect(minter1).transferFrom(minter1.address, minter2.address, 0)
-      await expectFailure(() => Free3.connect(minter1).claim(0), 'You must be the owner of this Free0 token')
+      await FreeBase.connect(minter1).transferFrom(minter1.address, minter2.address, 0)
+      await expectFailure(() => Free3.connect(minter1).claim(0), 'You must be the owner of this Free0')
     })
 
     it('claim should not work outside of the claiming window', async () => {
@@ -629,8 +629,8 @@ describe('Free3', () => {
   })
 })
 
-describe('Free4', function () {
-  let owner, minter, target, Free, Free0, Free1, Free4
+xdescribe('Free4', () => {
+  let owner, minter, target, FreeBase, Free0, Free1, Free4
 
   beforeEach(async () => {
     const signers = await ethers.getSigners()
@@ -638,27 +638,27 @@ describe('Free4', function () {
     minter = signers[3]
     target = signers[4]
 
-    const FreeFactory = await ethers.getContractFactory('Free', owner)
-    Free = await FreeFactory.deploy()
-    await Free.deployed()
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+    FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
 
     const Free0Factory = await ethers.getContractFactory('Free0', owner)
-    Free0 = await Free0Factory.deploy(Free.address)
+    Free0 = await Free0Factory.deploy(FreeBase.address)
     await Free0.deployed()
 
     const Free1Factory = await ethers.getContractFactory('Free1', owner)
-    Free1 = await Free1Factory.deploy(Free.address)
+    Free1 = await Free1Factory.deploy(FreeBase.address)
     await Free1.deployed()
 
-    const Free4Factory = await ethers.getContractFactory('Free4', minter, target)
-    Free4 = await Free4Factory.deploy(Free.address, minter.address, target.address)
+    const Free4Factory = await ethers.getContractFactory('Free4', minter)
+    Free4 = await Free4Factory.deploy(FreeBase.address, minter.address, target.address)
     await Free4.deployed()
 
-    await Free.connect(owner).createCollection(Free0.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(Free1.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(owner.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(owner.address, '', '', '', '', '')
-    await Free.connect(owner).createCollection(Free4.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free1.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free4.address, '', '', '', '', '')
   })
 
   it('works', async () => {
@@ -669,13 +669,13 @@ describe('Free4', function () {
     await expectFailure(() => Free4.connect(owner).claim(0), 'Only the minter can mint')
 
     await Free4.connect(minter).claim(1)
-    expect(await Free.connect(target).balanceOf(target.address)).to.equal(1)
+    expect(await FreeBase.connect(target).balanceOf(target.address)).to.equal(1)
 
-    await expectFailure(() => Free4.connect(minter).claim(1), 'Free0 already used to mint Free4')
-    await expectFailure(() => Free4.connect(minter).claim(0), 'You must be the owner of this Free0 token')
-    await expectFailure(() => Free4.connect(minter).claim(2), 'You must use a Free0 as a mint pass')
+    await expectFailure(() => Free4.connect(minter).claim(1), 'This Free0 has already been used to mint a Free4')
+    await expectFailure(() => Free4.connect(minter).claim(0), 'You must be the owner of this Free0')
+    await expectFailure(() => Free4.connect(minter).claim(2), 'Invalid Free0')
 
-    const metadata1 = await Free.connect(owner).tokenURI(1)
+    const metadata1 = await FreeBase.connect(owner).tokenURI(1)
     expect(parseMetadata(metadata1)).to.deep.equal({
       name: '1',
       description: '',
@@ -683,9 +683,281 @@ describe('Free4', function () {
       image: '',
       external_url: '?collectionId=0&tokenId=1',
       attributes: [
-        { trait_type: 'collection', value: '0' },
+        { trait_type: 'Collection', value: '0' },
         { trait_type: 'Used For Free1 Mint', value: true },
         { trait_type: 'Used For Free4 Mint', value: true }
+      ]
+    })
+  })
+})
+
+xdescribe('Free5', () => {
+  let owner, minter, FreeBase, Free0, Free1, ArtBlocks, Free5
+
+  beforeEach(async () => {
+    const signers = await ethers.getSigners()
+    owner = signers[2]
+    minter = signers[3]
+
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+    FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
+
+    const Free0Factory = await ethers.getContractFactory('Free0', owner)
+    Free0 = await Free0Factory.deploy(FreeBase.address)
+    await Free0.deployed()
+
+    const Free1Factory = await ethers.getContractFactory('Free1', owner)
+    Free1 = await Free1Factory.deploy(FreeBase.address)
+    await Free1.deployed()
+
+    const ArtBlocksFactory = await ethers.getContractFactory('MockGenArt721Core', owner)
+    ArtBlocks = await ArtBlocksFactory.deploy()
+    await ArtBlocks.deployed()
+
+    const Free5Factory = await ethers.getContractFactory('Free5', minter)
+    Free5 = await Free5Factory.deploy(FreeBase.address, ArtBlocks.address)
+    await Free5.deployed()
+
+    await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free1.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free5.address, '', '', '', '', '')
+  })
+
+  it('should only allow valid cgk, isid, fim, and free0 tokens to mint', async () => {
+    // valid tokens
+    await Free0.connect(minter).claim() // 0
+    await ArtBlocks.connect(minter).__markOwner(44000000, 44, minter.address) // cgk
+    await ArtBlocks.connect(minter).__markOwner(102000000, 102, minter.address) // isid
+    await ArtBlocks.connect(minter).__markOwner(152000000, 152, minter.address) // fim
+
+    await Free0.connect(minter).claim() // 1
+    await ArtBlocks.connect(minter).__markOwner(44000001, 44, minter.address) // cgk
+    await ArtBlocks.connect(minter).__markOwner(102000001, 102, minter.address) // isid
+    await ArtBlocks.connect(minter).__markOwner(152000001, 152, minter.address) // fim
+
+
+    // invalid tokens
+    await ArtBlocks.connect(minter).__markOwner(0, 0, minter.address) // fim
+    await Free1.connect(minter).claim(0) // 2
+
+    // unowned tokens
+    await ArtBlocks.connect(owner).__markOwner(44000002, 44, owner.address) // cgk
+    await ArtBlocks.connect(owner).__markOwner(102000002, 102, owner.address) // isid
+    await ArtBlocks.connect(owner).__markOwner(152000002, 152, owner.address) // fim
+    await Free0.connect(owner).claim() // 3
+
+    // incorrect collections
+    await expectFailure(
+      () => Free5.connect(minter).claim(2, 44000000, 102000000, 152000000),
+      'Invalid Free0'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(0, 0, 102000000, 152000000),
+      'Invalid CGK'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(0, 44000000, 0, 152000000),
+      'Invalid ISID'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(0, 44000000, 102000000, 0),
+      'Invalid FIM'
+    )
+
+
+    // unowned
+    await expectFailure(
+      () => Free5.connect(minter).claim(3, 44000000, 102000000, 152000000),
+      'You must be the owner of this Free0'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(0, 44000002, 102000000, 152000000),
+      'You must be the owner of this CGK'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(0, 44000000, 102000002, 152000000),
+      'You must be the owner of this ISID'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(0, 44000000, 102000000, 152000002),
+      'You must be the owner of this FIM'
+    )
+
+    // success
+    await Free5.connect(minter).claim(0, 44000000, 102000000, 152000000)
+
+    // reused
+    await expectFailure(
+      () => Free5.connect(minter).claim(0, 44000001, 102000001, 152000001),
+      'This Free0 has already been used to mint a Free5'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(1, 44000000, 102000001, 152000001),
+      'This CGK has already been used to mint a Free5'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(1, 44000001, 102000000, 152000001),
+      'This ISID has already been used to mint a Free5'
+    )
+
+    await expectFailure(
+      () => Free5.connect(minter).claim(1, 44000001, 102000001, 152000000),
+      'This FIM has already been used to mint a Free5'
+    )
+
+    // success
+    await Free5.connect(minter).claim(1, 44000001, 102000001, 152000001)
+
+    const metadata1 = await FreeBase.connect(owner).tokenURI(0)
+    expect(parseMetadata(metadata1)).to.deep.equal({
+      name: '0',
+      description: '',
+      license: 'CC0',
+      image: '',
+      external_url: '?collectionId=0&tokenId=0',
+      attributes: [
+        { trait_type: 'Collection', value: '0' },
+        { trait_type: 'Used For Free1 Mint', value: true },
+        { trait_type: 'Used For Free5 Mint', value: true }
+      ]
+    })
+  })
+})
+
+
+describe('Free6', () => {
+  let owner, minter, FreeBase, Free0, Free1, ArtBlocks, FastCash, Free6
+
+  beforeEach(async () => {
+    const signers = await ethers.getSigners()
+    owner = signers[2]
+    minter = signers[3]
+
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+    FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
+
+    const Free0Factory = await ethers.getContractFactory('Free0', owner)
+    Free0 = await Free0Factory.deploy(FreeBase.address)
+    await Free0.deployed()
+
+    const Free1Factory = await ethers.getContractFactory('Free1', owner)
+    Free1 = await Free1Factory.deploy(FreeBase.address)
+    await Free1.deployed()
+
+    const ArtBlocksFactory = await ethers.getContractFactory('MockGenArt721Core', owner)
+    ArtBlocks = await ArtBlocksFactory.deploy()
+    await ArtBlocks.deployed()
+
+    const FastCashFactory = await ethers.getContractFactory('MockFastCash', owner)
+    FastCash = await FastCashFactory.deploy()
+    await FastCash.deployed()
+
+    const Free6Factory = await ethers.getContractFactory('Free6', minter)
+    Free6 = await Free6Factory.deploy(FreeBase.address, ArtBlocks.address, FastCash.address)
+    await Free6.deployed()
+
+    await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free1.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free6.address, '', '', '', '', '')
+  })
+
+  it('should only allow minst for valid free0s, fims with # <= 125 and addresses with >= 1 FastCash balances', async () => {
+    // valid tokens
+    await Free0.connect(minter).claim() // 0
+    await Free0.connect(minter).claim() // 1
+    await ArtBlocks.connect(minter).__markOwner(152000000, 152, minter.address)
+    await ArtBlocks.connect(minter).__markOwner(152000125, 152, minter.address)
+
+
+    // invalid tokens
+    await ArtBlocks.connect(minter).__markOwner(0, 0, minter.address)
+    await ArtBlocks.connect(minter).__markOwner(152000126, 152, minter.address)
+    await Free1.connect(minter).claim(0) // 2
+
+    // unowned tokens
+    await ArtBlocks.connect(owner).__markOwner(152000002, 152, owner.address)
+    await Free0.connect(owner).claim() // 3
+
+    // incorrect collections
+    await expectFailure(
+      () => Free6.connect(minter).claim(2, 152000000),
+      'Invalid Free0'
+    )
+
+    await expectFailure(
+      () => Free6.connect(minter).claim(0, 0),
+      'Invalid FIM'
+    )
+
+    await expectFailure(
+      () => Free6.connect(minter).claim(0, 152000126),
+      'You must use a FIM that was minted with FastCash'
+    )
+
+    // unowned
+    await expectFailure(
+      () => Free6.connect(minter).claim(3, 152000000),
+      'You must be the owner of this Free0'
+    )
+
+    await expectFailure(
+      () => Free6.connect(minter).claim(0, 152000002),
+      'You must be the owner of this FIM'
+    )
+
+    // not enough fastcash
+    await expectFailure(
+      () => Free6.connect(minter).claim(0, 152000000),
+      'You must have a balance of at least 1 FastCash'
+    )
+
+    await FastCash.connect(owner).__setBalance(minter.address, ethers.utils.parseEther('1'))
+
+    // success
+    await Free6.connect(minter).claim(0, 152000000)
+
+    // reused
+    await expectFailure(
+      () => Free6.connect(minter).claim(0, 152000125),
+      'This Free0 has already been used to mint a Free6'
+    )
+
+    await expectFailure(
+      () => Free6.connect(minter).claim(1, 152000000),
+      'This FIM has already been used to mint a Free6'
+    )
+
+    // success
+    await Free6.connect(minter).claim(1, 152000125)
+
+    const metadata1 = await FreeBase.connect(owner).tokenURI(0)
+    expect(parseMetadata(metadata1)).to.deep.equal({
+      name: '0',
+      description: '',
+      license: 'CC0',
+      image: '',
+      external_url: '?collectionId=0&tokenId=0',
+      attributes: [
+        { trait_type: 'Collection', value: '0' },
+        { trait_type: 'Used For Free1 Mint', value: true },
+        { trait_type: 'Used For Free6 Mint', value: true }
       ]
     })
   })

@@ -23,7 +23,7 @@ contract Free3 {
   }
 
   mapping(address => Stake) public addressToStakes;
-  mapping(uint256 => bool) public free0UsedForFree3Mint;
+  mapping(uint256 => bool) public free0TokenIdUsed;
 
   address public administrator;
   uint256 public stakePeriod;
@@ -94,12 +94,12 @@ contract Free3 {
       && block.number < stake.secondStakeBlockNumber + progressPeriodExpiration,
       'You must wait between 5000 and 5100 blocks to claim'
     );
-    require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0 token');
-    require(free.tokenIdToCollectionId(free0TokenId) == 0, 'You must use a Free0 as a mint pass');
-    require(!free0UsedForFree3Mint[free0TokenId], 'Free0 already used to mint Free3');
+    require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
+    require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
+    require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free3');
     free.appendAttributeToToken(free0TokenId, 'Used For Free3 Mint', 'true');
 
-    free0UsedForFree3Mint[free0TokenId] = true;
+    free0TokenIdUsed[free0TokenId] = true;
     stake.mintBlockNumber = block.number;
 
     free.mint(3, msg.sender);
