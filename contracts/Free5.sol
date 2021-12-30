@@ -16,8 +16,8 @@ interface IArtBlocks {
 }
 
 contract Free5 {
-  IFree free;
-  IArtBlocks artBlocks;
+  IFree public immutable free;
+  IArtBlocks public immutable artBlocks;
 
   mapping(uint256 => bool) public free0tokenIdUsed;
   mapping(uint256 => bool) public cgkTokenIdUsed;

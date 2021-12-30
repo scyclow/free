@@ -13,7 +13,7 @@ interface IFree {
 
 
 contract Free3 {
-  IFree free;
+  IFree public immutable free;
 
   struct Stake {
     uint256 firstStakeBlockNumber;
@@ -26,8 +26,8 @@ contract Free3 {
   mapping(uint256 => bool) public free0TokenIdUsed;
 
   address public administrator;
-  uint256 public stakePeriod;
-  uint256 public progressPeriodExpiration;
+  uint256 public immutable stakePeriod;
+  uint256 public immutable progressPeriodExpiration;
 
   constructor(address freeAddr, uint256 _stakePeriod, uint256 _progressPeriodExpiration) {
     free = IFree(freeAddr);

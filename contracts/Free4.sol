@@ -11,16 +11,27 @@ interface IFree {
 }
 
 contract Free4 {
-  IFree free;
-  address minter;
-  address target;
+  IFree public immutable free;
+  address public immutable minter;
+  address public immutable target;
+
+  string public minterPrivateKey;
+  string public targetPrivateKey;
 
   mapping(uint256 => bool) public free0TokenIdUsed;
 
-  constructor(address freeAddr, address minterAddr, address targetAddr) {
+  constructor(
+    address freeAddr,
+    address minterAddr,
+    address targetAddr,
+    string memory _minterPrivateKey,
+    string memory _targetPrivateKey
+  ) {
     free = IFree(freeAddr);
     minter = minterAddr;
     target = targetAddr;
+    minterPrivateKey = _minterPrivateKey;
+    targetPrivateKey = _targetPrivateKey;
   }
 
   function claim(uint256 free0TokenId) public {

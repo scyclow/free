@@ -8,7 +8,7 @@ interface IFree {
 }
 
 contract Free0 {
-  IFree free;
+  IFree public immutable free;
 
   constructor(address freeAddr) {
     free = IFree(freeAddr);

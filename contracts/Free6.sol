@@ -20,9 +20,9 @@ interface IFastCashMoneyPlus {
 }
 
 contract Free6 {
-  IFree free;
-  IArtBlocks artBlocks;
-  IFastCashMoneyPlus fastCashMoneyPlus;
+  IFree public immutable free;
+  IArtBlocks public immutable artBlocks;
+  IFastCashMoneyPlus public immutable fastCashMoneyPlus;
 
   mapping(uint256 => bool) public free0tokenIdUsed;
   mapping(uint256 => bool) public fimTokenIdUsed;

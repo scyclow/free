@@ -11,7 +11,7 @@ interface IFree {
 }
 
 contract Free1 {
-  IFree free;
+  IFree public immutable free;
 
   uint public mintCount;
   mapping(uint256 => bool) public free0TokenIdUsed;

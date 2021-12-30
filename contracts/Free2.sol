@@ -24,10 +24,10 @@ interface IFree1 {
 }
 
 contract Free2 {
-  IFree free;
-  IFree1 free1Contract;
-  INVCMinter nvcMinter;
-  IIOU iouContract;
+  IFree public immutable free;
+  IFree1 public immutable free1Contract;
+  INVCMinter public immutable nvcMinter;
+  IIOU public immutable iouContract;
 
   mapping (uint256 => bool) public usedIOUs;
   mapping(uint256 => bool) public free0TokenIdUsed;

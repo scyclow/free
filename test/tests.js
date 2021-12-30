@@ -16,7 +16,7 @@ const uint = n => Number(n)
 const parseMetadata = metadata => JSON.parse(Buffer.from(metadata.split(',')[1], 'base64').toString('utf-8'))
 
 
-xdescribe('Base Free Contract', () => {
+describe('Base Free Contract', () => {
   it('minting should work', async () => {
     const [
       _, __,
@@ -181,7 +181,7 @@ xdescribe('Base Free Contract', () => {
   })
 })
 
-xdescribe('Free1', function () {
+describe('Free1', function () {
   this.timeout(40000)
   let owner, minter, notMinter, FreeBase, Free0, Free1
 
@@ -278,7 +278,7 @@ xdescribe('Free1', function () {
   })
 })
 
-xdescribe('Free2', () => {
+describe('Free2', () => {
   let owner, minter, notMinter, FreeBase, Free0, Free1, Free2, IOU, NVCMinter
 
   beforeEach(async () => {
@@ -372,7 +372,7 @@ xdescribe('Free2', () => {
   })
 })
 
-xdescribe('Free3', () => {
+describe('Free3', () => {
   let owner, minter1, minter2, FreeBase, Free0, Free3
 
   const stakeValue = ethers.utils.parseEther('0.25')
@@ -629,7 +629,7 @@ xdescribe('Free3', () => {
   })
 })
 
-xdescribe('Free4', () => {
+describe('Free4', () => {
   let owner, minter, target, FreeBase, Free0, Free1, Free4
 
   beforeEach(async () => {
@@ -651,7 +651,7 @@ xdescribe('Free4', () => {
     await Free1.deployed()
 
     const Free4Factory = await ethers.getContractFactory('Free4', minter)
-    Free4 = await Free4Factory.deploy(FreeBase.address, minter.address, target.address)
+    Free4 = await Free4Factory.deploy(FreeBase.address, minter.address, target.address, 'private', 'private')
     await Free4.deployed()
 
     await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
@@ -691,7 +691,7 @@ xdescribe('Free4', () => {
   })
 })
 
-xdescribe('Free5', () => {
+describe('Free5', () => {
   let owner, minter, FreeBase, Free0, Free1, ArtBlocks, Free5
 
   beforeEach(async () => {
