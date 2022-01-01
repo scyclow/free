@@ -5,6 +5,8 @@
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("@nomiclabs/hardhat-web3");
+const STUFF = require('../DEV_KEYS/stuff.json')
+
 
 module.exports = {
   solidity: {
@@ -12,5 +14,20 @@ module.exports = {
       {version: "0.8.11"},
       {version: "0.8.0"},
     ]
-  }
+  },
+  networks: {
+    mumbai: {
+      url: STUFF.POLYGON_MUMBAI_URL,
+      accounts: [`0x${STUFF.DEV1}`]
+    },
+    rinkeby: {
+      url: STUFF.ETH_RINKEBY_URL,
+      accounts: [`0x${STUFF.DEV1}`]
+    },
+    goerli: {
+      url: STUFF.ETH_GOERLI_URL,
+      accounts: [`0x${STUFF.DEV1}`]
+    }
+  },
+
 };
