@@ -67,9 +67,9 @@ async function main() {
 
 
     await FreeBase.connect(owner).createCollection(Free0.address, 'Free0 #', 'https://steviep.xyz/free', 'ipfs://bafybeifilrekoefi5dyukmqqno4yxssejqjf2zfl22x5cb3nicnvblfjmq', '', "If it's free, it's for me")
-    await FreeBase.connect(owner).createCollection(Free1.address, 'Free1 #', 'https://steviep.xyz/free', 'ipfs://bafybeiebr7brzhpmqmsjyqvq33upahzzshbsy6obbeo36n7wih77lfsrqe', '', "It's a free country")
+    await FreeBase.connect(owner).createCollection(Free1.address, 'Free1 #', 'https://steviep.xyz/free', 'ipfs://bafybeiebr7brzhpmqmsjyqvq33upahzzshbsy6obbeo36n7wih77lfsrqe', '', "The best things in life are free")
     await FreeBase.connect(owner).createCollection(Free2.address, 'Free2 #', 'https://steviep.xyz/free', 'ipfs://bafybeidbkyc7nmibhtrshv4fojmyikd237iq4d52j4aeju3of62sgrfaua', '', "Buy one get one free")
-    await FreeBase.connect(owner).createCollection(owner.address, 'Free3 #', 'https://steviep.xyz/free', 'ipfs://bafybeifquyfm6k64njikzvwkfcrh4vffirv72xcwms664f3dgkfr4gfwga', '', "It won't cost you a cent")
+    await FreeBase.connect(owner).createCollection(owner.address, 'Free3 #', 'https://steviep.xyz/free', 'ipfs://bafybeifquyfm6k64njikzvwkfcrh4vffirv72xcwms664f3dgkfr4gfwga', '', "It's a free country")
     await FreeBase.connect(owner).createCollection(owner.address, 'Free4 #', 'https://steviep.xyz/free', 'ipfs://bafybeif27l3wntncxelgmhtffydy6vy7szszvcbcoiy5bptscl4ywhi2le', '', "Live free or die")
     await FreeBase.connect(owner).createCollection(Free5.address, 'Free5 #', 'https://steviep.xyz/free', 'ipfs://bafybeiedegcdza6jst4mqe5l3625inq3tsk47ylx67ls3hhibkadpiu2fq', '', "Free as in speech")
     await FreeBase.connect(owner).createCollection(Free6.address, 'Free6 #', 'https://steviep.xyz/free', 'ipfs://bafybeif4ox5w33jmr4hudklzotohq4fbyyxugkeeov4254rymplmcuwqvm', '', "Free as in beer")
