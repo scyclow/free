@@ -181,6 +181,151 @@ describe('Base Free Contract', () => {
   })
 })
 
+describe.only('FreeERC20 <> FreeERC1155 Link', () => {
+  describe('setup', () => {
+    it('should work', async () => {
+      const [
+        _, __,
+        owner,
+        notOwner,
+      ] = await ethers.getSigners()
+
+      const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
+      const FreeERC20 = await FreeERC20Factory.deploy()
+      await FreeERC20.deployed()
+
+      const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
+      const FreeERC1155 = await FreeERC1155Factory.deploy()
+      await FreeERC1155.deployed()
+
+      await expectFailure(() =>
+        FreeERC20.connect(notOwner).connectERC1155(FreeERC1155.address, 0),
+        'Ownable:'
+      )
+
+      await expectFailure(() =>
+        FreeERC1155.connect(notOwner).connectERC20(FreeERC20.address, 0),
+        'Ownable:'
+      )
+
+      await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
+      await FreeERC1155.connect(owner).connectERC20(FreeERC20.address, 0)
+
+
+      expect(await FreeERC20.connect(owner).balanceOf(owner.address)).to.equal(0)
+      expect(await FreeERC1155.connect(owner).balanceOf(owner.address, 0)).to.equal(0)
+
+      const balanceArray = await FreeERC1155.connect(owner).balanceOfBatch([owner.address], [0])
+      expect(balanceArray.length).to.equal(1)
+      expect(uint(balanceArray[0])).to.equal(0)
+    })
+  })
+
+  describe('minting', () => {
+    it('should work', async () => {
+      const [
+        _, __,
+        owner,
+        notOwner,
+      ] = await ethers.getSigners()
+
+      const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
+      const FreeERC20 = await FreeERC20Factory.deploy()
+      await FreeERC20.deployed()
+
+      const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
+      const FreeERC1155 = await FreeERC1155Factory.deploy()
+      await FreeERC1155.deployed()
+
+      await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
+      await FreeERC1155.connect(owner).connectERC20(FreeERC20.address, 0)
+
+
+      const amount = 69
+      await FreeERC20.connect(owner).mint(owner.address, amount)
+
+      expect(await FreeERC20.connect(owner).balanceOf(owner.address)).to.equal(amount)
+      expect(await FreeERC1155.connect(owner).balanceOf(owner.address, 0)).to.equal(amount)
+
+      const balanceArray = await FreeERC1155.connect(owner).balanceOfBatch([owner.address], [0])
+      expect(balanceArray.length).to.equal(1)
+      expect(uint(balanceArray[0])).to.equal(amount)
+    })
+  })
+
+  describe('transfers', () => {
+    it('ERC20 transfers should work', async () => {
+      const [
+        _, __,
+        owner,
+        notOwner,
+      ] = await ethers.getSigners()
+
+      const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
+      const FreeERC20 = await FreeERC20Factory.deploy()
+      await FreeERC20.deployed()
+
+      const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
+      const FreeERC1155 = await FreeERC1155Factory.deploy()
+      await FreeERC1155.deployed()
+
+      await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
+      await FreeERC1155.connect(owner).connectERC20(FreeERC20.address, 0)
+
+
+      await FreeERC20.connect(owner).mint(owner.address, 100)
+      await FreeERC20.connect(owner).transfer(notOwner.address, 25)
+
+      expect(await FreeERC20.connect(owner).balanceOf(owner.address)).to.equal(75)
+      expect(await FreeERC1155.connect(owner).balanceOf(owner.address, 0)).to.equal(75)
+      const balanceArray = await FreeERC1155.connect(owner).balanceOfBatch([owner.address], [0])
+      expect(balanceArray.length).to.equal(1)
+      expect(uint(balanceArray[0])).to.equal(75)
+
+      expect(await FreeERC20.connect(notOwner).balanceOf(notOwner.address)).to.equal(25)
+      expect(await FreeERC1155.connect(notOwner).balanceOf(notOwner.address, 0)).to.equal(25)
+      const balanceArray2 = await FreeERC1155.connect(notOwner).balanceOfBatch([notOwner.address], [0])
+      expect(balanceArray2.length).to.equal(1)
+      expect(uint(balanceArray2[0])).to.equal(25)
+    })
+
+    it('ERC1155 transfers should work', async () => {
+      const [
+        _, __,
+        owner,
+        notOwner,
+      ] = await ethers.getSigners()
+
+      const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
+      const FreeERC20 = await FreeERC20Factory.deploy()
+      await FreeERC20.deployed()
+
+      const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
+      const FreeERC1155 = await FreeERC1155Factory.deploy()
+      await FreeERC1155.deployed()
+
+      await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
+      await FreeERC1155.connect(owner).connectERC20(FreeERC20.address, 0)
+
+
+      await FreeERC20.connect(owner).mint(owner.address, 100)
+      await FreeERC1155.connect(owner).safeTransferFrom(owner.address, notOwner.address, 0, 25, [])
+
+      expect(await FreeERC20.connect(owner).balanceOf(owner.address)).to.equal(75)
+      expect(await FreeERC1155.connect(owner).balanceOf(owner.address, 0)).to.equal(75)
+      const balanceArray = await FreeERC1155.connect(owner).balanceOfBatch([owner.address], [0])
+      expect(balanceArray.length).to.equal(1)
+      expect(uint(balanceArray[0])).to.equal(75)
+
+      expect(await FreeERC20.connect(notOwner).balanceOf(notOwner.address)).to.equal(25)
+      expect(await FreeERC1155.connect(notOwner).balanceOf(notOwner.address, 0)).to.equal(25)
+      const balanceArray2 = await FreeERC1155.connect(notOwner).balanceOfBatch([notOwner.address], [0])
+      expect(balanceArray2.length).to.equal(1)
+      expect(uint(balanceArray2[0])).to.equal(25)
+    })
+  })
+})
+
 describe('Free1', function () {
   this.timeout(40000)
   let owner, minter, notMinter, FreeBase, Free0, Free1
@@ -835,7 +980,6 @@ describe('Free5', () => {
     })
   })
 })
-
 
 describe('Free6', () => {
   let owner, minter, FreeBase, Free0, Free1, ArtBlocks, FastCash, Free6
