@@ -2,3 +2,4 @@ node_modules
 NOTES
 artifacts
 cache
+.DS_Store

@@ -1,5 +1,5 @@
 const { expect } = require("chai")
-const { time } = require('@openzeppelin/test-helpers');
+const { expectRevert, time, snapshot } = require('@openzeppelin/test-helpers')
 
 const expectFailure = async (fn, err) => {
   let failure
@@ -15,6 +15,8 @@ const num = n => Number(ethers.utils.formatEther(n))
 const uint = n => Number(n)
 const parseMetadata = metadata => JSON.parse(Buffer.from(metadata.split(',')[1], 'base64').toString('utf-8'))
 
+
+const safeTransferFrom = 'safeTransferFrom(address,address,uint256)'
 
 describe('Base Free Contract', () => {
   it('minting should work', async () => {
@@ -181,7 +183,7 @@ describe('Base Free Contract', () => {
   })
 })
 
-describe.only('FreeERC20 <> FreeERC1155 Link', () => {
+describe('FreeERC20 <> FreeERC1155 Link', () => {
   describe('setup', () => {
     it('should work', async () => {
       const [
@@ -190,12 +192,16 @@ describe.only('FreeERC20 <> FreeERC1155 Link', () => {
         notOwner,
       ] = await ethers.getSigners()
 
+      const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+      const FreeBase = await FreeBaseFactory.deploy()
+      await FreeBase.deployed()
+
       const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
-      const FreeERC20 = await FreeERC20Factory.deploy()
+      const FreeERC20 = await FreeERC20Factory.deploy(FreeBase.address)
       await FreeERC20.deployed()
 
       const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
-      const FreeERC1155 = await FreeERC1155Factory.deploy()
+      const FreeERC1155 = await FreeERC1155Factory.deploy(FreeBase.address)
       await FreeERC1155.deployed()
 
       await expectFailure(() =>
@@ -211,6 +217,15 @@ describe.only('FreeERC20 <> FreeERC1155 Link', () => {
       await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
       await FreeERC1155.connect(owner).connectERC20(FreeERC20.address, 0)
 
+      await expectFailure(() =>
+        FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0),
+        'already set'
+      )
+
+      await expectFailure(() =>
+        FreeERC1155.connect(owner).connectERC20(FreeERC20.address, 0),
+        'already set'
+      )
 
       expect(await FreeERC20.connect(owner).balanceOf(owner.address)).to.equal(0)
       expect(await FreeERC1155.connect(owner).balanceOf(owner.address, 0)).to.equal(0)
@@ -229,12 +244,16 @@ describe.only('FreeERC20 <> FreeERC1155 Link', () => {
         notOwner,
       ] = await ethers.getSigners()
 
+      const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+      const FreeBase = await FreeBaseFactory.deploy()
+      await FreeBase.deployed()
+
       const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
-      const FreeERC20 = await FreeERC20Factory.deploy()
+      const FreeERC20 = await FreeERC20Factory.deploy(FreeBase.address)
       await FreeERC20.deployed()
 
       const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
-      const FreeERC1155 = await FreeERC1155Factory.deploy()
+      const FreeERC1155 = await FreeERC1155Factory.deploy(FreeBase.address)
       await FreeERC1155.deployed()
 
       await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
@@ -261,12 +280,16 @@ describe.only('FreeERC20 <> FreeERC1155 Link', () => {
         notOwner,
       ] = await ethers.getSigners()
 
+      const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+      const FreeBase = await FreeBaseFactory.deploy()
+      await FreeBase.deployed()
+
       const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
-      const FreeERC20 = await FreeERC20Factory.deploy()
+      const FreeERC20 = await FreeERC20Factory.deploy(FreeBase.address)
       await FreeERC20.deployed()
 
       const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
-      const FreeERC1155 = await FreeERC1155Factory.deploy()
+      const FreeERC1155 = await FreeERC1155Factory.deploy(FreeBase.address)
       await FreeERC1155.deployed()
 
       await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
@@ -287,6 +310,23 @@ describe.only('FreeERC20 <> FreeERC1155 Link', () => {
       const balanceArray2 = await FreeERC1155.connect(notOwner).balanceOfBatch([notOwner.address], [0])
       expect(balanceArray2.length).to.equal(1)
       expect(uint(balanceArray2[0])).to.equal(25)
+
+
+      const erc20transferEvents = await FreeERC20.queryFilter({
+        address: FreeERC20.address,
+        topics: []
+      })
+
+      const erc1155transferEvents = await FreeERC1155.queryFilter({
+        address: FreeERC1155.address,
+        topics: []
+      })
+
+      const erc20transfers = erc20transferEvents.map(e => e.event).filter(e => e === 'Transfer')
+      const erc1155transfers = erc1155transferEvents.map(e => e.event).filter(e => e === 'TransferSingle')
+
+      expect(erc20transfers.length).to.equal(2)
+      expect(erc1155transfers.length).to.equal(2)
     })
 
     it('ERC1155 transfers should work', async () => {
@@ -296,12 +336,16 @@ describe.only('FreeERC20 <> FreeERC1155 Link', () => {
         notOwner,
       ] = await ethers.getSigners()
 
+      const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+      const FreeBase = await FreeBaseFactory.deploy()
+      await FreeBase.deployed()
+
       const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
-      const FreeERC20 = await FreeERC20Factory.deploy()
+      const FreeERC20 = await FreeERC20Factory.deploy(FreeBase.address)
       await FreeERC20.deployed()
 
       const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
-      const FreeERC1155 = await FreeERC1155Factory.deploy()
+      const FreeERC1155 = await FreeERC1155Factory.deploy(FreeBase.address)
       await FreeERC1155.deployed()
 
       await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
@@ -309,7 +353,7 @@ describe.only('FreeERC20 <> FreeERC1155 Link', () => {
 
 
       await FreeERC20.connect(owner).mint(owner.address, 100)
-      await FreeERC1155.connect(owner).safeTransferFrom(owner.address, notOwner.address, 0, 25, [])
+      await FreeERC1155.connect(owner)[safeTransferFrom](owner.address, notOwner.address, 0, 25, [])
 
       expect(await FreeERC20.connect(owner).balanceOf(owner.address)).to.equal(75)
       expect(await FreeERC1155.connect(owner).balanceOf(owner.address, 0)).to.equal(75)
@@ -322,6 +366,81 @@ describe.only('FreeERC20 <> FreeERC1155 Link', () => {
       const balanceArray2 = await FreeERC1155.connect(notOwner).balanceOfBatch([notOwner.address], [0])
       expect(balanceArray2.length).to.equal(1)
       expect(uint(balanceArray2[0])).to.equal(25)
+
+
+      const erc20transferEvents = await FreeERC20.queryFilter({
+        address: FreeERC20.address,
+        topics: []
+      })
+
+      const erc1155transferEvents = await FreeERC1155.queryFilter({
+        address: FreeERC1155.address,
+        topics: []
+      })
+
+      const erc20transfers = erc20transferEvents.map(e => e.event).filter(e => e === 'Transfer')
+      const erc1155transfers = erc1155transferEvents.map(e => e.event).filter(e => e === 'TransferSingle')
+
+      expect(erc20transfers.length).to.equal(2)
+      expect(erc1155transfers.length).to.equal(2)
+    })
+
+    it('ERC1155 batch transfers should work', async () => {
+      const [
+        _, __,
+        owner,
+        notOwner,
+      ] = await ethers.getSigners()
+
+      const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+      const FreeBase = await FreeBaseFactory.deploy()
+      await FreeBase.deployed()
+
+      const FreeERC20Factory = await ethers.getContractFactory('FreeERC20', owner)
+      const FreeERC20 = await FreeERC20Factory.deploy(FreeBase.address)
+      await FreeERC20.deployed()
+
+      const FreeERC1155Factory = await ethers.getContractFactory('FreeERC1155', owner)
+      const FreeERC1155 = await FreeERC1155Factory.deploy(FreeBase.address)
+      await FreeERC1155.deployed()
+
+      await FreeERC20.connect(owner).connectERC1155(FreeERC1155.address, 0)
+      await FreeERC1155.connect(owner).connectERC20(FreeERC20.address, 0)
+
+
+      await FreeERC20.connect(owner).mint(owner.address, 100)
+      await FreeERC1155.connect(owner).safeBatchTransferFrom(owner.address, notOwner.address, [0], [25], [])
+
+      expect(await FreeERC20.connect(owner).balanceOf(owner.address)).to.equal(75)
+      expect(await FreeERC1155.connect(owner).balanceOf(owner.address, 0)).to.equal(75)
+      const balanceArray = await FreeERC1155.connect(owner).balanceOfBatch([owner.address], [0])
+      expect(balanceArray.length).to.equal(1)
+      expect(uint(balanceArray[0])).to.equal(75)
+
+      expect(await FreeERC20.connect(notOwner).balanceOf(notOwner.address)).to.equal(25)
+      expect(await FreeERC1155.connect(notOwner).balanceOf(notOwner.address, 0)).to.equal(25)
+      const balanceArray2 = await FreeERC1155.connect(notOwner).balanceOfBatch([notOwner.address], [0])
+      expect(balanceArray2.length).to.equal(1)
+      expect(uint(balanceArray2[0])).to.equal(25)
+
+
+      const erc20transferEvents = await FreeERC20.queryFilter({
+        address: FreeERC20.address,
+        topics: []
+      })
+
+      const erc1155transferEvents = await FreeERC1155.queryFilter({
+        address: FreeERC1155.address,
+        topics: []
+      })
+
+      const erc20transfers = erc20transferEvents.map(e => e.event).filter(e => e === 'Transfer')
+      const erc1155transfers = erc1155transferEvents.map(e => e.event).filter(e => e === 'TransferSingle')
+      const erc1155batchTransfers = erc1155transferEvents.map(e => e.event).filter(e => e === 'TransferBatch')
+
+      expect(erc20transfers.length).to.equal(2)
+      expect(erc1155transfers.length).to.equal(1)
+      expect(erc1155batchTransfers.length).to.equal(1)
     })
   })
 })
@@ -1103,6 +1222,322 @@ describe('Free6', () => {
         { trait_type: 'Used For Free1 Mint', value: true },
         { trait_type: 'Used For Free6 Mint', value: true }
       ]
+    })
+  })
+})
+
+
+// require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
+// require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free19');
+// require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
+// require(msg.sender == claimer, 'You must be the claimer')
+
+// require(block.timestamp >= lastAssigned + 1 days, 'You must wait at least 1 day after the most recent assignment');
+
+// free0TokenIdUsed[free0TokenId] = true;
+// free.appendAttributeToToken(free0TokenId, 'Used For Free19 Mint', 'true');
+// free.mint(19, msg.sender);
+
+describe.only('Free Series 2', () => {
+
+  let owner, minter, notMinter
+  beforeEach(async () => {
+    const signers = await ethers.getSigners()
+    owner = signers[2]
+    minter = signers[3]
+    notMinter = signers[4]
+
+    const FreeBaseFactory = await ethers.getContractFactory('Free', owner)
+    FreeBase = await FreeBaseFactory.deploy()
+    await FreeBase.deployed()
+
+    const Free0Factory = await ethers.getContractFactory('Free0', owner)
+    Free0 = await Free0Factory.deploy(FreeBase.address)
+    await Free0.deployed()
+
+    const Free1Factory = await ethers.getContractFactory('Free1', owner)
+    Free1 = await Free1Factory.deploy(FreeBase.address)
+    await Free1.deployed()
+
+    const MockFreeFactory = await ethers.getContractFactory('MockFree', owner)
+    MockFree2 = await MockFreeFactory.deploy(FreeBase.address, 2)
+    await MockFree2.deployed()
+
+    MockFree3 = await MockFreeFactory.deploy(FreeBase.address, 3)
+    await MockFree3.deployed()
+
+    MockFree4 = await MockFreeFactory.deploy(FreeBase.address, 4)
+    await MockFree4.deployed()
+
+    const LowercaseMockFreeFactory = await ethers.getContractFactory('LowercaseMockFree', owner)
+    MockFree5 = await LowercaseMockFreeFactory.deploy(FreeBase.address, 5)
+    await MockFree5.deployed()
+
+    MockFree6 = await LowercaseMockFreeFactory.deploy(FreeBase.address, 6)
+    await MockFree6.deployed()
+
+    const Free7Factory = await ethers.getContractFactory('Free7', owner)
+    Free7 = await Free7Factory.deploy(
+      FreeBase.address,
+      Free1.address,
+      MockFree2.address,
+      MockFree3.address,
+      MockFree4.address,
+      MockFree5.address,
+      MockFree6.address
+    )
+    await Free1.deployed()
+
+    // const Free8Factory = await ethers.getContractFactory('Free8', owner)
+    // Free8 = await Free8Factory.deploy(FreeBase.address)
+    // await Free8.deployed()
+
+    // const Free9Factory = await ethers.getContractFactory('Free9', owner)
+    // Free9 = await Free9Factory.deploy(FreeBase.address)
+    // await Free9.deployed()
+
+    // const Free10Factory = await ethers.getContractFactory('Free10', owner)
+    // Free10 = await Free10Factory.deploy(FreeBase.address)
+    // await Free10.deployed()
+
+    // const Free11Factory = await ethers.getContractFactory('Free11', owner)
+    // Free11 = await Free11Factory.deploy(FreeBase.address)
+    // await Free11.deployed()
+
+    // const Free12Factory = await ethers.getContractFactory('Free12', owner)
+    // Free12 = await Free12Factory.deploy(FreeBase.address)
+    // await Free12.deployed()
+
+    // const Free13Factory = await ethers.getContractFactory('Free13', owner)
+    // Free13 = await Free13Factory.deploy(FreeBase.address)
+    // await Free13.deployed()
+
+    // const Free14Factory = await ethers.getContractFactory('Free14', owner)
+    // Free14 = await Free14Factory.deploy(FreeBase.address)
+    // await Free14.deployed()
+
+    // const Free15Factory = await ethers.getContractFactory('Free15', owner)
+    // Free15 = await Free15Factory.deploy(FreeBase.address)
+    // await Free15.deployed()
+
+    // const Free16Factory = await ethers.getContractFactory('Free16', owner)
+    // Free16 = await Free16Factory.deploy(FreeBase.address)
+    // await Free16.deployed()
+
+    const Free17Factory = await ethers.getContractFactory('Free17', owner)
+    Free17 = await Free17Factory.deploy(FreeBase.address)
+    await Free17.deployed()
+
+    // const Free18Factory = await ethers.getContractFactory('Free18', owner)
+    // Free18 = await Free18Factory.deploy(FreeBase.address)
+    // await Free18.deployed()
+
+    // const Free19Factory = await ethers.getContractFactory('Free19', owner)
+    // Free19 = await Free19Factory.deploy(FreeBase.address)
+    // await Free19.deployed()
+
+
+    await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free1.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(MockFree2.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(MockFree3.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(MockFree4.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(MockFree5.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(MockFree6.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free7.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free8.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free9.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free10.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free11.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free12.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free13.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free14.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free15.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free16.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    await FreeBase.connect(owner).createCollection(Free17.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free18.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free19.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+    // await FreeBase.connect(owner).createCollection(Free20.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+
+
+    await Free0.connect(minter).claim()
+    await Free0.connect(notMinter).claim()
+
+    await Free0.connect(minter).claim()
+    await Free1.connect(minter).claim(2)
+  })
+
+
+
+  async function preCheck(mintFn, freeNumber) {
+    await expectFailure(() => mintFn(minter, 3), 'Invalid Free0')
+    await expectFailure(() => mintFn(notMinter, 0), 'You must be the owner of this Free0')
+
+  }
+
+  async function postCheck(mintFn, freeNumber, freeContract, newestTokenId=4) {
+    await expectFailure(() => mintFn(minter, 0), 'This Free0 has already been used to mint a Free'+freeNumber)
+    expect(await freeContract.connect(owner).free0TokenIdUsed(0)).to.equal(true)
+    expect(await FreeBase.connect(owner).ownerOf(newestTokenId)).to.equal(minter.address)
+
+    const metadata0 = parseMetadata(await FreeBase.connect(owner).tokenURI(0))
+    expect(metadata0.name).to.equal('0')
+    expect(metadata0.description).to.equal('')
+    expect(metadata0.license).to.equal('CC0')
+    expect(metadata0.image).to.equal('')
+    expect(metadata0.external_url).to.equal('?collectionId=0&tokenId=0')
+    expect(metadata0.attributes).to.deep.include({ trait_type: 'Collection', value: '0' })
+    expect(metadata0.attributes).to.deep.include({ trait_type: `Used For Free${freeNumber} Mint`, value: true })
+  }
+
+  async function claim(mintFn, freeNumber, freeContract, newestTokenId=4) {
+    await preCheck(mintFn, freeNumber)
+    await mintFn(minter, 0)
+    await postCheck(mintFn, freeNumber, freeContract, newestTokenId)
+  }
+
+  describe('Free7', () => {
+    async function setupAllFrees(skip=false, skipSupporting=false) {
+
+      if (skip !== 1) await Free1.connect(minter).claim(0)
+      if (skip !== 2) await MockFree2.connect(minter).claim(0)
+      if (skip !== 3) await MockFree3.connect(minter).claim(0)
+      if (skip !== 4) await MockFree4.connect(minter).claim(0)
+      if (skip !== 5) await MockFree5.connect(minter).claim(0)
+      if (skip !== 6) await MockFree6.connect(minter).claim(0)
+
+      if (skipSupporting !== 1) await Free1.connect(notMinter).claim(1)
+      if (skipSupporting !== 2) await MockFree2.connect(notMinter).claim(1)
+      if (skipSupporting !== 3) await MockFree3.connect(notMinter).claim(1)
+      if (skipSupporting !== 4) await MockFree4.connect(notMinter).claim(1)
+      if (skipSupporting !== 5) await MockFree5.connect(notMinter).claim(1)
+      if (skipSupporting !== 6) await MockFree6.connect(notMinter).claim(1)
+    }
+
+    it('should work when signer has Free0 with all previous Frees + a supporting Free0 with all previous Frees', async () => {
+      await setupAllFrees()
+      await FreeBase.connect(notMinter)[safeTransferFrom](notMinter.address, minter.address, 1)
+
+      const mintFn = (signer, id) => Free7.connect(signer).claim(id, 1)
+      await claim(mintFn, 7, Free7, 16)
+    })
+
+    it('should revert when signer has invalid supporting Free0', async () => {
+      await setupAllFrees()
+      await FreeBase.connect(notMinter)[safeTransferFrom](notMinter.address, minter.address, 1)
+
+      await expectRevert(
+        Free7.connect(minter).claim(0, 3),
+        'Invalid Free0'
+      )
+    })
+
+    it('should revert when signer has Free0 with all previous Frees, but not a supporting Free0 with all previous Frees', async () => {
+      await setupAllFrees()
+
+      await expectRevert(
+        Free7.connect(minter).claim(0, 1),
+        'You must be the owner of the Supporting Free0'
+      )
+    })
+
+    for (let i = 0; i < 6; i++) {
+      const missing = i + 1
+      it(`should revert if free0 has not minted ${missing}`, async () => {
+        await setupAllFrees(missing)
+
+        await FreeBase.connect(notMinter)[safeTransferFrom](notMinter.address, minter.address, 1)
+        await expectRevert(
+          Free7.connect(minter).claim(0, 1),
+          'Free0 has not been used for all previous Frees'
+        )
+      })
+
+      it(`should revert if supporting free0 has not minted ${missing}`, async () => {
+        await setupAllFrees(false, missing)
+
+        await FreeBase.connect(notMinter)[safeTransferFrom](notMinter.address, minter.address, 1)
+        await expectRevert(
+          Free7.connect(minter).claim(0, 1),
+         'Supporting Free0 has not been used for all previous Frees'
+        )
+      })
+    }
+
+  })
+
+
+  describe('Free17', () => {
+    it('should work for a 0x123456789 address', async () => {
+      const minedSigner = await ethers.getImpersonatedSigner("0x123456789ea900fa2b585dd299e03d12fa4293bc");
+      await owner.sendTransaction({
+        to: minedSigner.address,
+        value: ethers.utils.parseEther("1.0")
+      })
+
+      const mintFn = (signer, id) => Free17.connect(signer).claim(id)
+
+      await preCheck(mintFn, 17)
+
+      await FreeBase.connect(minter)[safeTransferFrom](minter.address, minedSigner.address, 0)
+      await Free17.connect(minedSigner).claim(0)
+      await FreeBase.connect(minedSigner)[safeTransferFrom](minedSigner.address, minter.address, 0)
+
+      await FreeBase.connect(minedSigner)[safeTransferFrom](minedSigner.address, minter.address, 4)
+
+      await postCheck(mintFn, 17, Free17)
+    })
+
+    it('should revert for another address', async () => {
+      const incorrectSigner1 = await ethers.getImpersonatedSigner("0x123456780ea900fa2b585dd299e03d12fa4293bc");
+      const incorrectSigner2 = await ethers.getImpersonatedSigner("0x987654321ea900fa2b585dd299e03d12fa4293bc");
+
+      await owner.sendTransaction({
+        to: incorrectSigner1.address,
+        value: ethers.utils.parseEther("1.0")
+      })
+
+
+      await FreeBase.connect(minter)[safeTransferFrom](minter.address, incorrectSigner1.address, 0)
+      await expectRevert(
+        Free17.connect(incorrectSigner1).claim(0),
+        'Signer address must start with 0x123456789'
+      )
+
+      await owner.sendTransaction({
+        to: incorrectSigner2.address,
+        value: ethers.utils.parseEther("2.0")
+      })
+      await FreeBase.connect(incorrectSigner1)[safeTransferFrom](incorrectSigner1.address, incorrectSigner2.address, 0)
+      await expectRevert(
+        Free17.connect(incorrectSigner2).claim(0),
+        'Signer address must start with 0x123456789'
+      )
     })
   })
 })
