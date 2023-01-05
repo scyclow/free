@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0
 
 pragma solidity ^0.8.17;
-
+ 
 interface IFree {
   function mint(uint256 collectionId, address to) external;
   function ownerOf(uint256 tokenId) external returns (address owner);
@@ -9,49 +9,57 @@ interface IFree {
   function appendAttributeToToken(uint256 tokenId, string memory attrKey, string memory attrValue) external;
 }
 
-interface IPlottables {
-  function transferFrom(address from, address to, uint256 tokenId) external;
+interface I10EthGiveaway {
+  function exists() external view returns (bool);
+  function ownerOf(uint256 tokenId) external view returns (address);
+}
+
+interface ITenETHChallenge {
+  function challenge(address sender, uint256 free0TokenId) external returns (bool);
 }
 
 
 contract Free10 {
   IFree public immutable free;
-  IPlottables public immutable plottables;
+  I10EthGiveaway public immutable tenEthGiveaway;
+
+  address public easyChallengeAddress;
+  address public selectedChallengeAddress;
+
+
   mapping(uint256 => bool) public free0TokenIdUsed;
-  mapping(uint256 => bool) public instructionsUsed;
-  bool public seeded;
 
-  uint256 activeInstruction;
-
-  constructor(address freeAddr, address plottablesAddr) {
+  constructor(address freeAddr, address tenETHAddr) {
     free = IFree(freeAddr);
-    plottables = IPlottables(plottablesAddr);
+    tenEthGiveaway = I10EthGiveaway(tenETHAddr);
+
+    easyChallengeAddress = address(new EasyTenETHChallenge());
   }
 
-  function seed(uint256 instructionTokenId) external {
-    require(!seeded, 'Free10 has already been seeded');
-    seeded = true;
-    activeInstruction = instructionTokenId;
-    instructionsUsed[instructionTokenId] = true;
-    plottables.transferFrom(msg.sender, address(this), instructionTokenId);
+  function setTenEthChallenge(address addr) external {
+    require(msg.sender == tenEthGiveaway.ownerOf(0), 'Only the 10 ETH Giveaway token owner can set the challenge');
+    selectedChallengeAddress = addr;
   }
 
 
-  function claim(uint256 free0TokenId, uint256 instructionTokenId) external {
+
+  function claim(uint256 free0TokenId) public {
     require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free10');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    require(!instructionsUsed[instructionTokenId], 'This Instruction has already been used');
-
-    plottables.transferFrom(msg.sender, address(this), instructionTokenId);
-    plottables.transferFrom(address(this), msg.sender, activeInstruction);
-
-    activeInstruction = instructionTokenId;
-    instructionsUsed[instructionTokenId] = true;
+    require(tenEthGiveaway.exists(), '10 ETH Giveaway token cannot be redeemed');
+    require(ITenETHChallenge(selectedChallengeAddress).challenge(msg.sender, free0TokenId), '10 ETH Giveaway challenge has not been met');
 
     free0TokenIdUsed[free0TokenId] = true;
     free.appendAttributeToToken(free0TokenId, 'Used For Free10 Mint', 'true');
     free.mint(10, msg.sender);
+  }
+}
+
+
+contract EasyTenETHChallenge {
+  function challenge(address sender, uint256 free0TokenId) external pure returns (bool) {
+    return true;
   }
 }

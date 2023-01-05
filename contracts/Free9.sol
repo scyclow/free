@@ -9,46 +9,27 @@ interface IFree {
   function appendAttributeToToken(uint256 tokenId, string memory attrKey, string memory attrValue) external;
 }
 
-interface ISubwayJesusPamphlets {
-  function ownerOf(uint256 id) external returns (address);
+interface IEditions {
+  function balanceOf(address account, uint256 id) external returns (uint256);
 }
 
 
 contract Free9 {
   IFree public immutable free;
-  ISubwayJesusPamphlets public immutable subwayJesusPamphlets;
+  IEditions public immutable editions;
   mapping(uint256 => bool) public free0TokenIdUsed;
-  mapping(uint256 => uint256) public sjpBlessings;
-  mapping(uint256 => uint256) public blessingsReceived;
-  mapping(bytes32 => bool) public blessings;
 
-  constructor(address freeAddr, address sjpAddr) {
+  constructor(address freeAddr, address editionsAddr) {
     free = IFree(freeAddr);
-    subwayJesusPamphlets = ISubwayJesusPamphlets(sjpAddr);
+    editions = IEditions(editionsAddr);
   }
-
-  function hashBlessing(uint256 sjpTokenId, uint256 free0TokenId) public view returns (bytes32) {
-    return keccak256(abi.encodePacked(sjpTokenId, free0TokenId));
-  }
-
-  function bless(uint256 sjpTokenId, uint256 free0TokenId) external {
-    require(subwayJesusPamphlets.ownerOf(sjpTokenId) == msg.sender, 'You must own this Pamphlet');
-    require(sjpBlessings[sjpTokenId] < 5, 'This pamphlet has blessed too many times');
-    bytes32 hashedBlessing = hashBlessing(sjpTokenId, free0TokenId);
-    require(!blessings[hashedBlessing], 'This pamphlet has already blessed this token');
-
-    blessings[hashedBlessing] = true;
-    sjpBlessings[sjpTokenId] += 1;
-    blessingsReceived[free0TokenId] += 1;
-  }
-
 
   function claim(uint256 free0TokenId) external {
     require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free9');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    require(blessingsReceived[free0TokenId] >= 3, 'Free0 must have at least 3 blessings');
+    require(editions.balanceOf(msg.sender, 1) >= 10, 'You must support the RPAA');
 
     free0TokenIdUsed[free0TokenId] = true;
     free.appendAttributeToToken(free0TokenId, 'Used For Free9 Mint', 'true');

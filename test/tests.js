@@ -965,16 +965,6 @@ describe('Free6', () => {
 })
 
 
-// require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
-// require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free19');
-// require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
-// require(msg.sender == claimer, 'You must be the claimer')
-
-// require(block.timestamp >= lastAssigned + 1 days, 'You must wait at least 1 day after the most recent assignment');
-
-// free0TokenIdUsed[free0TokenId] = true;
-// free.appendAttributeToToken(free0TokenId, 'Used For Free19 Mint', 'true');
-// free.mint(19, msg.sender);
 
 describe.only('Free Series 2', () => {
 
@@ -1062,9 +1052,9 @@ describe.only('Free Series 2', () => {
     // Free16 = await Free16Factory.deploy(FreeBase.address)
     // await Free16.deployed()
 
-    const Free17Factory = await ethers.getContractFactory('Free17', owner)
-    Free17 = await Free17Factory.deploy(FreeBase.address)
-    await Free17.deployed()
+    const Free12Factory = await ethers.getContractFactory('Free12', owner)
+    Free12 = await Free12Factory.deploy(FreeBase.address)
+    await Free12.deployed()
 
     // const Free18Factory = await ethers.getContractFactory('Free18', owner)
     // Free18 = await Free18Factory.deploy(FreeBase.address)
@@ -1096,8 +1086,7 @@ describe.only('Free Series 2', () => {
     // await FreeBase.connect(owner).createCollection(Free11.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
 
-    // await FreeBase.connect(owner).createCollection(Free12.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free12.address, '', '', '', '', '')
 
     // await FreeBase.connect(owner).createCollection(Free13.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
@@ -1111,7 +1100,8 @@ describe.only('Free Series 2', () => {
     // await FreeBase.connect(owner).createCollection(Free16.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
 
-    await FreeBase.connect(owner).createCollection(Free17.address, '', '', '', '', '')
+    // await FreeBase.connect(owner).createCollection(Free17.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
 
     // await FreeBase.connect(owner).createCollection(Free18.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
@@ -1230,7 +1220,34 @@ describe.only('Free Series 2', () => {
   })
 
 
-  describe('Free17', () => {
+  describe('Free8', () => {
+    it('should work if the minter has no maps (but maybe other AB projects)')
+    it('should revert if the minter has a map')
+  })
+
+  describe('Free9', () => {
+    it('should work if the minter has >= 10 RPAA')
+    it('should revert if the minter < 10 RPAA')
+  })
+
+  describe('Free10', () => {
+    it('should work if 10E token hasnt been burned + its connected')
+    it('should revert if 10E token hasnt been burned + its not connected')
+    it('should revert if 10E token has been burned + its connected')
+    it('should revert if non 10E owner tries to connect')
+  })
+
+  describe('Free11', () => {
+    it('should work if 3 or more pointers are pointing to a minter')
+    it('should work if 3 or more pointers are pointing to multiple minters')
+    it('should revert if less than three pointers are pointing to a minter')
+    it('should revert if 10E token has been burned + its connected')
+    it('should revert if attempting to point pointer not owned')
+    it('should revert if attempting to point owned other AB project')
+  })
+
+
+  describe('Free12', () => {
     it('should work for a 0x123456789 address', async () => {
       const minedSigner = await ethers.getImpersonatedSigner("0x123456789ea900fa2b585dd299e03d12fa4293bc");
       await owner.sendTransaction({
@@ -1238,17 +1255,17 @@ describe.only('Free Series 2', () => {
         value: ethers.utils.parseEther("1.0")
       })
 
-      const mintFn = (signer, id) => Free17.connect(signer).claim(id)
+      const mintFn = (signer, id) => Free12.connect(signer).claim(id)
 
-      await preCheck(mintFn, 17)
+      await preCheck(mintFn, 12)
 
       await FreeBase.connect(minter)[safeTransferFrom](minter.address, minedSigner.address, 0)
-      await Free17.connect(minedSigner).claim(0)
+      await Free12.connect(minedSigner).claim(0)
       await FreeBase.connect(minedSigner)[safeTransferFrom](minedSigner.address, minter.address, 0)
 
       await FreeBase.connect(minedSigner)[safeTransferFrom](minedSigner.address, minter.address, 4)
 
-      await postCheck(mintFn, 17, Free17)
+      await postCheck(mintFn, 12, Free12)
     })
 
     it('should revert for another address', async () => {
@@ -1263,7 +1280,7 @@ describe.only('Free Series 2', () => {
 
       await FreeBase.connect(minter)[safeTransferFrom](minter.address, incorrectSigner1.address, 0)
       await expectRevert(
-        Free17.connect(incorrectSigner1).claim(0),
+        Free12.connect(incorrectSigner1).claim(0),
         'Signer address must start with 0x123456789'
       )
 
@@ -1273,9 +1290,82 @@ describe.only('Free Series 2', () => {
       })
       await FreeBase.connect(incorrectSigner1)[safeTransferFrom](incorrectSigner1.address, incorrectSigner2.address, 0)
       await expectRevert(
-        Free17.connect(incorrectSigner2).claim(0),
+        Free12.connect(incorrectSigner2).claim(0),
         'Signer address must start with 0x123456789'
       )
     })
   })
+
+  describe('Free13', () => {
+    it('should work if timestamp is a friday (UTC) and base gas is <= 5')
+    it('should revert if timestamp is not a friday and base gas is <= 5')
+    it('should revert if timestamp is a friday and base gas is > 5')
+  })
+
+  describe('Free14', () => {
+    it('should work if a IFD is swapped')
+    it('should revert if IFD has bee used before')
+    it('should revert if IFD not owned')
+    it('should revert if owned, but not IFD')
+  })
+
+  describe('Free15', () => {
+    it('should work if free bas total supply is an even multiple of 100 + if the block number is also an even multiple of 100')
+    it('should revert if free bas total supply is not an even multiple of 100 + if the block number is an even multiple of 100')
+    it('should revert if free bas total supply is an even multiple of 100 + if the block number is not an even multiple of 100')
+  })
+
+  describe('Free16', () => {
+    it('should work if the owner has all the shit')
+    it('should revert if the owner is missing any of all the shit')
+  })
+
+  describe('Free17', () => {
+    it('should work if the Free0 has at least 3 blessings')
+    it('should refert if the Free0 has at less than 3 blessings')
+    it('blessing should revert if non owner of jesus pamphlet')
+    it('blessing should revert if its a non-upgraded pamphlet')
+    it('blessing should revert if > 5 blessings')
+    it('blessing should revert if blessing a non Free0')
+  })
+
+  describe('Free18', () => {
+    it('should work if there are tokens left')
+    it('should revert if there are no tokens left')
+    it('should revert if non-multisig attempts to increase token count')
+  })
+
+  describe('Free19', () => {
+    it('should work if claimer has been claimer for 24 hours or more')
+    it('should revert if not the claimer, but claimer has been active for 24 hours or more')
+    it('should revert if claimer has been claimer for less than 24 hours')
+  })
+
+  describe('Free20', () => {
+    describe('first attempt', () => {
+      it('stake, wait 200000 blocks, claim within 1000 blocks should work + return staked eth')
+      it('shoudl revert if within window, but already unstaked')
+      it('should revert if withdraw attempted before window')
+      it('should revert if withdraw is attempted after window')
+      it('should revert if attempting to stake an already staked token')
+      it('should revert if attempting to stake a non-free0')
+      it('should revert if attempting to stake a non-owned free0')
+      it('should revert if attempting to stake an already used free0')
+    })
+
+    describe('multiple attempts', () => {
+      it('should work if staking more eth on a lost free0')
+      it('should revert if not staking at least twice the previous stake')
+      it('should revert if attempting staking on free0 not originally owned')
+      it('should revert if attempting to stake before previous window has closed')
+    })
+
+    describe('withdraw', () => {
+      it('should work if 2000000 blocks after window has closed')
+      it('should revert if < 2000000 blocks have passed since window has closed')
+      it('should revert if non-original staker attempts withdraw')
+    })
+  })
+
+
 })

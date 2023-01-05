@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0
 
 pragma solidity ^0.8.17;
- 
+
 interface IFree {
   function mint(uint256 collectionId, address to) external;
   function ownerOf(uint256 tokenId) external returns (address owner);
@@ -9,37 +9,49 @@ interface IFree {
   function appendAttributeToToken(uint256 tokenId, string memory attrKey, string memory attrValue) external;
 }
 
+interface IPlottables {
+  function transferFrom(address from, address to, uint256 tokenId) external;
+}
+
 
 contract Free14 {
   IFree public immutable free;
-  address public terminallyOnlineMultisig;
-
-  uint256 public claimableTokensLeft;
-
+  IPlottables public immutable plottables;
   mapping(uint256 => bool) public free0TokenIdUsed;
+  mapping(uint256 => bool) public instructionsUsed;
+  bool public seeded;
 
-  constructor(address freeAddr, address toMultisigAddr, address editionsAddr) {
+  uint256 activeInstruction;
+
+  constructor(address freeAddr, address plottablesAddr) {
     free = IFree(freeAddr);
-    terminallyOnlineMultisig = toMultisigAddr;
+    plottables = IPlottables(plottablesAddr);
   }
 
-  function incrementClaimableTokens(uint256 increment) external {
-    require(msg.sender == terminallyOnlineMultisig, 'Can only be called by TO multisig');
-    claimableTokensLeft += increment;
+  function seed(uint256 instructionTokenId) external {
+    require(!seeded, 'Free14 has already been seeded');
+    seeded = true;
+    activeInstruction = instructionTokenId;
+    instructionsUsed[instructionTokenId] = true;
+    plottables.transferFrom(msg.sender, address(this), instructionTokenId);
   }
 
-  function claim(uint256 free0TokenId) public {
+
+  function claim(uint256 free0TokenId, uint256 instructionTokenId) external {
     require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free14');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    require(claimableTokensLeft >= 0, 'No tokens left to claim');
-    claimableTokensLeft -= 1;
+    require(!instructionsUsed[instructionTokenId], 'This Instruction has already been used');
 
+    plottables.transferFrom(msg.sender, address(this), instructionTokenId);
+    plottables.transferFrom(address(this), msg.sender, activeInstruction);
+
+    activeInstruction = instructionTokenId;
+    instructionsUsed[instructionTokenId] = true;
 
     free0TokenIdUsed[free0TokenId] = true;
     free.appendAttributeToToken(free0TokenId, 'Used For Free14 Mint', 'true');
     free.mint(14, msg.sender);
   }
 }
-

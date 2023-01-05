@@ -1,65 +1,35 @@
 // SPDX-License-Identifier: CC0
 
 pragma solidity ^0.8.17;
- 
+
 interface IFree {
   function mint(uint256 collectionId, address to) external;
   function ownerOf(uint256 tokenId) external returns (address owner);
   function tokenIdToCollectionId(uint256 tokenId) external returns (uint256 collectionId);
   function appendAttributeToToken(uint256 tokenId, string memory attrKey, string memory attrValue) external;
-}
-
-interface I10EthGiveaway {
-  function exists() external view returns (bool);
-  function ownerOf(uint256 tokenId) external view returns (address);
-}
-
-interface ITenETHChallenge {
-  function challenge(address sender, uint256 free0TokenId) external returns (bool);
+  function totalSupply() external view returns (uint256);
 }
 
 
 contract Free15 {
   IFree public immutable free;
-  I10EthGiveaway public immutable tenEthGiveaway;
-
-  address public easyChallengeAddress;
-  address public selectedChallengeAddress;
-
 
   mapping(uint256 => bool) public free0TokenIdUsed;
 
-  constructor(address freeAddr, address tenETHAddr) {
+  constructor(address freeAddr) {
     free = IFree(freeAddr);
-    tenEthGiveaway = I10EthGiveaway(tenETHAddr);
-
-    easyChallengeAddress = address(new EasyTenETHChallenge());
   }
-
-  function setTenEthChallenge(address addr) external {
-    require(msg.sender == tenEthGiveaway.ownerOf(0), 'Only the 10 ETH Giveaway token owner can set the challenge');
-    selectedChallengeAddress = addr;
-  }
-
-
 
   function claim(uint256 free0TokenId) public {
     require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free15');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    require(tenEthGiveaway.exists(), '10 ETH Giveaway token cannot be redeemed');
-    require(ITenETHChallenge(selectedChallengeAddress).challenge(msg.sender, free0TokenId), '10 ETH Giveaway challenge has not been met');
+    require((free.totalSupply() / 100) % 2 == 0, 'Invalid total Free count');
+    require((block.number/ 100) % 2 == 0, 'Invalid block number');
 
     free0TokenIdUsed[free0TokenId] = true;
     free.appendAttributeToToken(free0TokenId, 'Used For Free15 Mint', 'true');
     free.mint(15, msg.sender);
-  }
-}
-
-
-contract EasyTenETHChallenge {
-  function challenge(address sender, uint256 free0TokenId) external pure returns (bool) {
-    return true;
   }
 }
