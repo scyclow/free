@@ -37,7 +37,7 @@ contract Free8 {
     uint256[] memory tokensOfOwner = artBlocks.tokensOfOwner(msg.sender);
 
     for (uint256 i; i < tokensOfOwner.length; i++) {
-      require(artBlocks.tokenIdToProjectId(tokensOfOwner[i]) != 316, 'You cannot own a Map');
+      require(artBlocks.tokenIdToProjectId(tokensOfOwner[i]) != 316, 'You cannot own a Map of Nothing');
     }
 
     free0TokenIdUsed[free0TokenId] = true;

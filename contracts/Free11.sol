@@ -31,30 +31,33 @@ contract Free11 {
 
   function point(uint256 tokenId, address target) external {
     require(artBlocks.tokenIdToProjectId(tokenId) == 387, 'Invalid Pointer');
-    require(artBlocks.ownerOf(tokenId) == msg.sender, 'You must be the owner of this Pointer');
+    require(artBlocks.ownerOf(tokenId) == msg.sender, 'You must own this Pointer');
     pointerToTarget[tokenId] = target;
   }
 
   function claim(
     uint256 free0TokenId,
-    uint256 pointer1TokenId,
-    uint256 pointer2TokenId,
-    uint256 pointer3TokenId
+    uint256 topPointerTokenId,
+    uint256 bottomPointerTokenId,
+    uint256 leftPointerTokenId,
+    uint256 rightPointerTokenId
   ) external {
     require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free11');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
     require(
-      pointerToTarget[pointer1TokenId] == msg.sender
-      && pointerToTarget[pointer2TokenId] == msg.sender
-      && pointerToTarget[pointer3TokenId] == msg.sender,
+      pointerToTarget[topPointerTokenId] == msg.sender
+      && pointerToTarget[bottomPointerTokenId] == msg.sender
+      && pointerToTarget[leftPointerTokenId] == msg.sender
+      && pointerToTarget[rightPointerTokenId] == msg.sender,
       'This target does not have enough Pointers'
     );
 
-    pointerCount[pointer1TokenId] += 1;
-    pointerCount[pointer2TokenId] += 1;
-    pointerCount[pointer3TokenId] += 1;
+    pointerCount[topPointerTokenId] += 1;
+    pointerCount[bottomPointerTokenId] += 1;
+    pointerCount[leftPointerTokenId] += 1;
+    pointerCount[rightPointerTokenId] += 1;
 
     free0TokenIdUsed[free0TokenId] = true;
     free.appendAttributeToToken(free0TokenId, 'Used For Free11 Mint', 'true');

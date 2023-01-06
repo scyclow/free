@@ -24,6 +24,7 @@ contract Free10 {
   I10EthGiveaway public immutable tenEthGiveaway;
 
   address public easyChallengeAddress;
+  address public impossibleChallengeAddress;
   address public selectedChallengeAddress;
 
 
@@ -34,6 +35,7 @@ contract Free10 {
     tenEthGiveaway = I10EthGiveaway(tenETHAddr);
 
     easyChallengeAddress = address(new EasyTenETHChallenge());
+    impossibleChallengeAddress = address(new ImpossibleTenETHChallenge());
   }
 
   function setTenEthChallenge(address addr) external {
@@ -41,14 +43,12 @@ contract Free10 {
     selectedChallengeAddress = addr;
   }
 
-
-
   function claim(uint256 free0TokenId) public {
     require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free10');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    require(tenEthGiveaway.exists(), '10 ETH Giveaway token cannot be redeemed');
+    require(tenEthGiveaway.exists(), '10 ETH Giveaway token has been redeemed');
     require(ITenETHChallenge(selectedChallengeAddress).challenge(msg.sender, free0TokenId), '10 ETH Giveaway challenge has not been met');
 
     free0TokenIdUsed[free0TokenId] = true;
@@ -61,5 +61,11 @@ contract Free10 {
 contract EasyTenETHChallenge {
   function challenge(address sender, uint256 free0TokenId) external pure returns (bool) {
     return true;
+  }
+}
+
+contract ImpossibleTenETHChallenge {
+  function challenge(address sender, uint256 free0TokenId) external pure returns (bool) {
+    return false;
   }
 }

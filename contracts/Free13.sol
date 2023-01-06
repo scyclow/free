@@ -12,7 +12,7 @@ interface IFree {
 
 contract Free13 {
   IFree public immutable free;
-  uint256 public constant jan4_2023 = 1672808400; // TODO change to 13
+  uint256 public constant jan13_2023 = 1673568000;
 
   mapping(uint256 => bool) public free0TokenIdUsed;
 
@@ -27,12 +27,11 @@ contract Free13 {
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
     require(
-      ((block.timestamp - jan4_2023) / 1 days) % 7 == 0,
-      'Can only be claimed on a Wednesday'
-    ); // TODO not sure if this works
+      ((block.timestamp - jan13_2023) / 1 days) % 7 == 0,
+      'Can only be claimed on a Friday'
+    );
 
-    require(block.basefee <= 5, 'Base fee must be 5gwei or less'); // TODO is this gwei or wei?
-
+    require(block.basefee <= 5 gwei, 'Base fee must be 5gwei or less');
 
     free0TokenIdUsed[free0TokenId] = true;
     free.appendAttributeToToken(free0TokenId, 'Used For Free13 Mint', 'true');

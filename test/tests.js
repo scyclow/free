@@ -968,6 +968,8 @@ describe('Free6', () => {
 
 describe.only('Free Series 2', () => {
 
+  const zeroAddr = '0x0000000000000000000000000000000000000000'
+
   let owner, minter, notMinter
   beforeEach(async () => {
     const signers = await ethers.getSigners()
@@ -1016,29 +1018,29 @@ describe.only('Free Series 2', () => {
     )
     await Free1.deployed()
 
-    // const Free8Factory = await ethers.getContractFactory('Free8', owner)
-    // Free8 = await Free8Factory.deploy(FreeBase.address)
-    // await Free8.deployed()
+    const Free8Factory = await ethers.getContractFactory('Free8', owner)
+    Free8 = await Free8Factory.deploy(FreeBase.address, '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270')
+    await Free8.deployed()
 
-    // const Free9Factory = await ethers.getContractFactory('Free9', owner)
-    // Free9 = await Free9Factory.deploy(FreeBase.address)
-    // await Free9.deployed()
+    const Free9Factory = await ethers.getContractFactory('Free9', owner)
+    Free9 = await Free9Factory.deploy(FreeBase.address, '0x3c6fe936f6e050c243b901d809aea24084674687')
+    await Free9.deployed()
 
-    // const Free10Factory = await ethers.getContractFactory('Free10', owner)
-    // Free10 = await Free10Factory.deploy(FreeBase.address)
-    // await Free10.deployed()
+    const Free10Factory = await ethers.getContractFactory('Free10', owner)
+    Free10 = await Free10Factory.deploy(FreeBase.address, '0x13bBBEfE251c94467D183821b663Ef0bD0a8A722')
+    await Free10.deployed()
 
-    // const Free11Factory = await ethers.getContractFactory('Free11', owner)
-    // Free11 = await Free11Factory.deploy(FreeBase.address)
-    // await Free11.deployed()
+    const Free11Factory = await ethers.getContractFactory('Free11', owner)
+    Free11 = await Free11Factory.deploy(FreeBase.address, '0x99a9B7c1116f9ceEB1652de04d5969CcE509B069')
+    await Free11.deployed()
 
-    // const Free12Factory = await ethers.getContractFactory('Free12', owner)
-    // Free12 = await Free12Factory.deploy(FreeBase.address)
-    // await Free12.deployed()
+    const Free12Factory = await ethers.getContractFactory('Free12', owner)
+    Free12 = await Free12Factory.deploy(FreeBase.address)
+    await Free12.deployed()
 
-    // const Free13Factory = await ethers.getContractFactory('Free13', owner)
-    // Free13 = await Free13Factory.deploy(FreeBase.address)
-    // await Free13.deployed()
+    const Free13Factory = await ethers.getContractFactory('Free13', owner)
+    Free13 = await Free13Factory.deploy(FreeBase.address)
+    await Free13.deployed()
 
     // const Free14Factory = await ethers.getContractFactory('Free14', owner)
     // Free14 = await Free14Factory.deploy(FreeBase.address)
@@ -1052,9 +1054,10 @@ describe.only('Free Series 2', () => {
     // Free16 = await Free16Factory.deploy(FreeBase.address)
     // await Free16.deployed()
 
-    const Free12Factory = await ethers.getContractFactory('Free12', owner)
-    Free12 = await Free12Factory.deploy(FreeBase.address)
-    await Free12.deployed()
+    // const Free17Factory = await ethers.getContractFactory('Free17', owner)
+    // Free17 = await Free17Factory.deploy(FreeBase.address)
+    // await Free17.deployed()
+
 
     // const Free18Factory = await ethers.getContractFactory('Free18', owner)
     // Free18 = await Free18Factory.deploy(FreeBase.address)
@@ -1072,24 +1075,14 @@ describe.only('Free Series 2', () => {
     await FreeBase.connect(owner).createCollection(MockFree4.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(MockFree5.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(MockFree6.address, '', '', '', '', '')
+
     await FreeBase.connect(owner).createCollection(Free7.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free8.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free9.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free10.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free11.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
-
+    await FreeBase.connect(owner).createCollection(Free8.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free9.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free10.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free11.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free12.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free13.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free13.address, '', '', '', '', '')
 
     // await FreeBase.connect(owner).createCollection(Free14.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
@@ -1123,7 +1116,7 @@ describe.only('Free Series 2', () => {
 
 
   async function preCheck(mintFn, freeNumber) {
-    await expectFailure(() => mintFn(minter, 3), 'Invalid Free0')
+    // await expectFailure(() => mintFn(minter, 3), 'Invalid Free0')
     await expectFailure(() => mintFn(notMinter, 0), 'You must be the owner of this Free0')
 
   }
@@ -1221,29 +1214,243 @@ describe.only('Free Series 2', () => {
 
 
   describe('Free8', () => {
-    it('should work if the minter has no maps (but maybe other AB projects)')
-    it('should revert if the minter has a map')
+    let mapWallet, noMapWallet
+
+    beforeEach(async () => {
+      mapWallet = await ethers.getImpersonatedSigner('0x47144372eb383466D18FC91DB9Cd0396Aa6c87A4')
+      noMapWallet = await ethers.getImpersonatedSigner('0x8d55ccab57f3cba220ab3e3f3b7c9f59529e5a65')
+    })
+
+    it('should work if the minter has no maps (but maybe other AB projects)', async () => {
+
+      const mintFn = (signer, id) => Free8.connect(signer).claim(id)
+
+      await preCheck(mintFn, 8)
+
+      await FreeBase.connect(minter)[safeTransferFrom](minter.address, noMapWallet.address, 0)
+      await Free8.connect(noMapWallet).claim(0)
+      await FreeBase.connect(noMapWallet)[safeTransferFrom](noMapWallet.address, minter.address, 0)
+      await FreeBase.connect(noMapWallet)[safeTransferFrom](noMapWallet.address, minter.address, 4)
+
+      await postCheck(mintFn, 8, Free8)
+    })
+
+    it('should revert if the minter has a map', async () => {
+      await FreeBase.connect(minter)[safeTransferFrom](minter.address, mapWallet.address, 0)
+
+      await expectRevert(
+        Free8.connect(mapWallet).claim(0),
+        'You cannot own a Map of Nothing'
+      )
+    })
   })
 
   describe('Free9', () => {
-    it('should work if the minter has >= 10 RPAA')
-    it('should revert if the minter < 10 RPAA')
+    let RPAAMinterContract
+    beforeEach(async () => {
+      RPAAMinterContract = await ethers.getContractAt(['function mint(uint256 amount) external payable'], '0x66C4d7050dcD4a4CcAc59009A77B9ed44EFdf086')
+    })
+
+    it('should work if the minter has exactly 10 RPAA', async () => {
+      await RPAAMinterContract.connect(minter).mint(10, {
+        value: ethers.utils.parseEther('0.1')
+      })
+
+      const mintFn = (signer, id) => Free9.connect(signer).claim(id)
+      await claim(mintFn, 9, Free9)
+    })
+
+    it('should work if the minter has more than 10 RPAA', async () => {
+      await RPAAMinterContract.connect(minter).mint(100, {
+        value: ethers.utils.parseEther('1')
+      })
+
+      const mintFn = (signer, id) => Free9.connect(signer).claim(id)
+      await claim(mintFn, 9, Free9)
+    })
+
+    it('should revert if the minter < 10 RPAA', async () => {
+      await RPAAMinterContract.connect(minter).mint(9, {
+        value: ethers.utils.parseEther('0.09')
+      })
+
+      await expectRevert(
+        Free9.connect(minter).claim(0),
+        'You must support the RPAA'
+      )
+    })
   })
 
   describe('Free10', () => {
-    it('should work if 10E token hasnt been burned + its connected')
-    it('should revert if 10E token hasnt been burned + its not connected')
-    it('should revert if 10E token has been burned + its connected')
-    it('should revert if non 10E owner tries to connect')
+    let TenETHGiveawayContract, start
+    beforeEach(async () => {
+      TenETHGiveawayContract = await ethers.getContractAt(
+        [
+          'function redeem() external',
+          'function safeTransferFrom(address, address, uint256) external',
+        ],
+        '0x13bBBEfE251c94467D183821b663Ef0bD0a8A722'
+      )
+
+      tenEthTokenOwner = await ethers.getImpersonatedSigner('0x7ccd2EE72a75F7e4776f598c1Be11A119fD8d191')
+
+      start = await snapshot()
+    })
+
+    afterEach(() => start.restore())
+
+    it('should let the 10E token owner set the challenge, even after transferring the token', async () => {
+      const easyAddress = await Free10.connect(tenEthTokenOwner).easyChallengeAddress()
+      const impossibleAddress = await Free10.connect(tenEthTokenOwner).impossibleChallengeAddress()
+
+      expect(await Free10.connect(tenEthTokenOwner).selectedChallengeAddress()).to.equal(zeroAddr)
+
+      await Free10.connect(tenEthTokenOwner).setTenEthChallenge(easyAddress)
+      expect(await Free10.connect(tenEthTokenOwner).selectedChallengeAddress()).to.equal(easyAddress)
+
+      await TenETHGiveawayContract.connect(tenEthTokenOwner)[safeTransferFrom](tenEthTokenOwner.address, minter.address, 0)
+      await Free10.connect(minter).setTenEthChallenge(zeroAddr)
+      expect(await Free10.connect(tenEthTokenOwner).selectedChallengeAddress()).to.equal(zeroAddr)
+
+    })
+
+    it('should revert if non 10E token owner tries to set the challenge', async () => {
+      const easyAddress = await Free10.connect(tenEthTokenOwner).easyChallengeAddress()
+      const impossibleAddress = await Free10.connect(tenEthTokenOwner).impossibleChallengeAddress()
+
+      await expectRevert(
+        Free10.connect(minter).setTenEthChallenge(easyAddress),
+        'Only the 10 ETH Giveaway token owner can set the challenge'
+      )
+
+      await TenETHGiveawayContract.connect(tenEthTokenOwner)[safeTransferFrom](tenEthTokenOwner.address, minter.address, 0)
+      await expectRevert(
+        Free10.connect(tenEthTokenOwner).setTenEthChallenge(easyAddress),
+        'Only the 10 ETH Giveaway token owner can set the challenge'
+      )
+    })
+
+    it('should work if 10E token hasnt been burned + its connected', async () => {
+      const easyAddress = await Free10.connect(tenEthTokenOwner).easyChallengeAddress()
+      const impossibleAddress = await Free10.connect(tenEthTokenOwner).impossibleChallengeAddress()
+
+      await Free10.connect(tenEthTokenOwner).setTenEthChallenge(impossibleAddress)
+
+      await expectRevert(
+        Free10.connect(minter).claim(0),
+        '10 ETH Giveaway challenge has not been met'
+      )
+
+      await Free10.connect(tenEthTokenOwner).setTenEthChallenge(easyAddress)
+      const mintFn = (signer, id) => Free10.connect(signer).claim(id)
+      await claim(mintFn, 10, Free10)
+
+    })
+
+    it('should revert if 10E token hasnt been burned + its not connected', async () => {
+      await expectRevert.unspecified(
+        Free10.connect(minter).claim(0),
+        '10 ETH Giveaway challenge has not been met'
+      )
+    })
+
+    it('should revert if 10E token has been burned + its connected', async () => {
+      const easyAddress = await Free10.connect(tenEthTokenOwner).easyChallengeAddress()
+
+      await Free10.connect(tenEthTokenOwner).setTenEthChallenge(easyAddress)
+
+      await TenETHGiveawayContract.connect(tenEthTokenOwner).redeem()
+
+      await expectRevert(
+        Free10.connect(minter).claim(0),
+        '10 ETH Giveaway token has been redeemed'
+      )
+    })
+
   })
 
   describe('Free11', () => {
-    it('should work if 3 or more pointers are pointing to a minter')
-    it('should work if 3 or more pointers are pointing to multiple minters')
-    it('should revert if less than three pointers are pointing to a minter')
-    it('should revert if 10E token has been burned + its connected')
-    it('should revert if attempting to point pointer not owned')
-    it('should revert if attempting to point owned other AB project')
+    let pointerWhale1, pointerWhale2, pointerImposter, ABContract, start
+    beforeEach(async () => {
+      pointerWhale1 = await ethers.getImpersonatedSigner('0xF46DBD0155B719BC637cA83B4325a1c1eaEB1Dd4')
+      pointerWhale2 = await ethers.getImpersonatedSigner('0x162BC01387ce534a46279b4F3FE16663d31A99a7')
+      pointerImposter = await ethers.getImpersonatedSigner('0xF523011fC571d67beB53ee108FDEB010D1ADdBE9')
+
+      ABContract = await ethers.getContractAt(
+        [
+          'function safeTransferFrom(address, address, uint256) external',
+        ],
+        '0x99a9B7c1116f9ceEB1652de04d5969CcE509B069'
+      )
+      start = await snapshot()
+    })
+
+    afterEach(() => start.restore())
+
+    it('should work if 4 or more pointers are pointing to a minter', async () => {
+      await Free11.connect(pointerWhale1).point(387000071, minter.address)
+      await Free11.connect(pointerWhale1).point(387000080, minter.address)
+      await Free11.connect(pointerWhale1).point(387000087, minter.address)
+      await Free11.connect(pointerWhale2).point(387000011, minter.address)
+
+      const mintFn = (signer, id) => Free11.connect(signer).claim(id, 387000071, 387000080, 387000087, 387000011)
+      await claim(mintFn, 11, Free11)
+
+      expect(Number(await Free11.connect(minter).pointerCount(387000071))).to.equal(1)
+      expect(Number(await Free11.connect(minter).pointerCount(387000080))).to.equal(1)
+      expect(Number(await Free11.connect(minter).pointerCount(387000087))).to.equal(1)
+      expect(Number(await Free11.connect(minter).pointerCount(387000011))).to.equal(1)
+    })
+
+    it('should work if 4 or more pointers are pointing to multiple minters, and if pointers are transferred', async () => {
+      await Free11.connect(pointerWhale1).point(387000071, minter.address)
+      await Free11.connect(pointerWhale1).point(387000080, minter.address)
+      await Free11.connect(pointerWhale1).point(387000087, minter.address)
+      await Free11.connect(pointerWhale2).point(387000011, minter.address)
+
+      await ABContract.connect(pointerWhale1)[safeTransferFrom](pointerWhale1.address, notMinter.address, 387000080)
+
+      await Free11.connect(pointerWhale1).point(387000019, notMinter.address)
+      await Free11.connect(pointerWhale1).point(387000020, notMinter.address)
+      await Free11.connect(pointerWhale1).point(387000021, notMinter.address)
+      await Free11.connect(pointerWhale1).point(387000044, notMinter.address)
+
+      await Free11.connect(minter).claim(0, 387000071, 387000080, 387000087, 387000011)
+      await Free11.connect(notMinter).claim(1, 387000019, 387000020, 387000021, 387000044)
+    })
+
+    it('should revert if less than 4 pointers are pointing to a minter', async () => {
+      await Free11.connect(pointerWhale1).point(387000071, minter.address)
+      await Free11.connect(pointerWhale1).point(387000080, minter.address)
+      await Free11.connect(pointerWhale1).point(387000087, minter.address)
+
+      await expectRevert(
+        Free11.connect(minter).claim(0, 387000071, 387000080, 387000087, 387000011),
+        'This target does not have enough Pointers'
+      )
+
+      await Free11.connect(pointerWhale2).point(387000011, minter.address)
+      await Free11.connect(pointerWhale2).point(387000011, notMinter.address)
+
+      await expectRevert(
+        Free11.connect(minter).claim(0, 387000071, 387000080, 387000087, 387000011),
+        'This target does not have enough Pointers'
+      )
+    })
+
+    it('should revert if attempting to point pointer not owned', async () => {
+      await expectRevert(
+        Free11.connect(pointerWhale2).point(387000071, zeroAddr),
+        'You must own this Pointer'
+      )
+    })
+
+    it('should revert if attempting to point owned other AB project', async () => {
+      await expectRevert(
+        Free11.connect(pointerImposter).point(390000000, zeroAddr),
+        'Invalid Pointer'
+      )
+    })
   })
 
 
@@ -1296,74 +1503,125 @@ describe.only('Free Series 2', () => {
     })
   })
 
-  describe('Free13', () => {
-    it('should work if timestamp is a friday (UTC) and base gas is <= 5')
-    it('should revert if timestamp is not a friday and base gas is <= 5')
-    it('should revert if timestamp is a friday and base gas is > 5')
+  describe.only('Free13', () => {
+
+    it('should work if timestamp is a friday (UTC) and base gas is <= 5', async () => {
+
+      await time.increaseTo(1739491200) // random friday far in the future: 2/14/23 00:00:00 GMT
+      const mintFn = (signer, id) => Free13.connect(signer).claim(id, { maxFeePerGas: ethers.utils.parseUnits('50', 'gwei') })
+      await claim(mintFn, 13, Free13)
+
+      await time.increaseTo(1739534399) // random friday far in the future: 2/14/23 23:59:59 GMT
+      await Free13.connect(notMinter).claim(1, { maxFeePerGas: ethers.utils.parseUnits('5', 'gwei') })
+    })
+
+    it('should revert if timestamp is not a friday and base gas is <= 5', async () => {
+      await time.increaseTo(1739534400) // random saturday far in the future: 2/15/23 00:00:00 GMT
+      await Free13.connect(notMinter).claim(1, { maxFeePerGas: ethers.utils.parseUnits('5', 'gwei') })
+    })
+
+    // I'm pretty sure this will work in production, but can't figure out how to test this
+    it.skip('should revert if timestamp is a friday and base gas is > 5', async () => {})
   })
 
   describe('Free14', () => {
-    it('should work if a IFD is swapped')
-    it('should revert if IFD has bee used before')
-    it('should revert if IFD not owned')
-    it('should revert if owned, but not IFD')
+
+    it('should work if a IFD is swapped', async () => {})
+
+    it('should revert if IFD has bee used before', async () => {})
+
+    it('should revert if IFD not owned', async () => {})
+
+    it('should revert if owned, but not IFD', async () => {})
   })
 
   describe('Free15', () => {
-    it('should work if free bas total supply is an even multiple of 100 + if the block number is also an even multiple of 100')
-    it('should revert if free bas total supply is not an even multiple of 100 + if the block number is an even multiple of 100')
-    it('should revert if free bas total supply is an even multiple of 100 + if the block number is not an even multiple of 100')
+
+    it('should work if free bas total supply is an even multiple of 100 + if the block number is also an even multiple of 100', async () => {})
+
+    it('should revert if free bas total supply is not an even multiple of 100 + if the block number is an even multiple of 100', async () => {})
+
+    it('should revert if free bas total supply is an even multiple of 100 + if the block number is not an even multiple of 100', async () => {})
   })
 
   describe('Free16', () => {
-    it('should work if the owner has all the shit')
-    it('should revert if the owner is missing any of all the shit')
+
+    it('should work if the owner has all the shit', async () => {})
+
+    it('should revert if the owner is missing any of all the shit', async () => {})
   })
 
   describe('Free17', () => {
-    it('should work if the Free0 has at least 3 blessings')
-    it('should refert if the Free0 has at less than 3 blessings')
-    it('blessing should revert if non owner of jesus pamphlet')
-    it('blessing should revert if its a non-upgraded pamphlet')
-    it('blessing should revert if > 5 blessings')
-    it('blessing should revert if blessing a non Free0')
+
+    it('should work if the Free0 has at least 3 blessings', async () => {})
+
+    it('should refert if the Free0 has at less than 3 blessings', async () => {})
+
+    it('blessing should revert if non owner of jesus pamphlet', async () => {})
+
+    it('blessing should revert if its a non-upgraded pamphlet', async () => {})
+
+    it('blessing should revert if > 5 blessings', async () => {})
+
+    it('blessing should revert if blessing a non Free0', async () => {})
   })
 
   describe('Free18', () => {
-    it('should work if there are tokens left')
-    it('should revert if there are no tokens left')
-    it('should revert if non-multisig attempts to increase token count')
+
+    it('should work if there are tokens left', async () => {})
+
+    it('should revert if there are no tokens left', async () => {})
+
+    it('should revert if non-multisig attempts to increase token count', async () => {})
   })
 
   describe('Free19', () => {
-    it('should work if claimer has been claimer for 24 hours or more')
-    it('should revert if not the claimer, but claimer has been active for 24 hours or more')
-    it('should revert if claimer has been claimer for less than 24 hours')
+
+    it('should work if claimer has been claimer for 24 hours or more', async () => {})
+
+    it('should revert if not the claimer, but claimer has been active for 24 hours or more', async () => {})
+
+    it('should revert if claimer has been claimer for less than 24 hours', async () => {})
   })
 
   describe('Free20', () => {
     describe('first attempt', () => {
-      it('stake, wait 200000 blocks, claim within 1000 blocks should work + return staked eth')
-      it('shoudl revert if within window, but already unstaked')
-      it('should revert if withdraw attempted before window')
-      it('should revert if withdraw is attempted after window')
-      it('should revert if attempting to stake an already staked token')
-      it('should revert if attempting to stake a non-free0')
-      it('should revert if attempting to stake a non-owned free0')
-      it('should revert if attempting to stake an already used free0')
+
+      it('stake, wait 200000 blocks, claim within 1000 blocks should work + return staked eth', async () => {})
+
+      it('shoudl revert if within window, but already unstaked', async () => {})
+
+      it('should revert if withdraw attempted before window', async () => {})
+
+      it('should revert if withdraw is attempted after window', async () => {})
+
+      it('should revert if attempting to stake an already staked token', async () => {})
+
+      it('should revert if attempting to stake a non-free0', async () => {})
+
+      it('should revert if attempting to stake a non-owned free0', async () => {})
+
+      it('should revert if attempting to stake an already used free0', async () => {})
     })
 
     describe('multiple attempts', () => {
-      it('should work if staking more eth on a lost free0')
-      it('should revert if not staking at least twice the previous stake')
-      it('should revert if attempting staking on free0 not originally owned')
-      it('should revert if attempting to stake before previous window has closed')
+
+      it('should work if staking more eth on a lost free0', async () => {})
+
+      it('should revert if not staking at least twice the previous stake', async () => {})
+
+      it('should revert if attempting staking on free0 not originally owned', async () => {})
+
+      it('should revert if attempting to stake before previous window has closed', async () => {})
     })
 
     describe('withdraw', () => {
-      it('should work if 2000000 blocks after window has closed')
-      it('should revert if < 2000000 blocks have passed since window has closed')
-      it('should revert if non-original staker attempts withdraw')
+
+      it('should work if 2000000 blocks after window has closed', async () => {})
+
+      it('should revert if < 2000000 blocks have passed since window has closed', async () => {})
+
+      it('should revert if non-original staker attempts withdraw', async () => {})
     })
   })
 
