@@ -23,6 +23,12 @@ function times(t, fn) {
 
 const safeTransferFrom = 'safeTransferFrom(address,address,uint256)'
 
+const encodeWithSignature = (functionName, argTypes, params) => {
+  const iface = new ethers.utils.Interface([`function ${functionName}(${argTypes.join(',')})`])
+  return iface.encodeFunctionData(functionName, params)
+}
+
+
 describe('Base Free Contract', () => {
   it('minting should work', async () => {
     const [
@@ -1070,9 +1076,9 @@ describe.only('Free Series 2', () => {
     await Free17.deployed()
 
 
-    // const Free18Factory = await ethers.getContractFactory('Free18', owner)
-    // Free18 = await Free18Factory.deploy(FreeBase.address)
-    // await Free18.deployed()
+    const Free18Factory = await ethers.getContractFactory('Free18', owner)
+    Free18 = await Free18Factory.deploy(FreeBase.address, '0xCBA420f0b43c32a1d49851f6356A37de6EE8e288', '0x3c6fe936f6e050c243b901d809aea24084674687')
+    await Free18.deployed()
 
     const Free19Factory = await ethers.getContractFactory('Free19', owner)
     Free19 = await Free19Factory.deploy(FreeBase.address)
@@ -1102,10 +1108,7 @@ describe.only('Free Series 2', () => {
     await FreeBase.connect(owner).createCollection(Free15.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free16.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free17.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free18.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
-
+    await FreeBase.connect(owner).createCollection(Free18.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free19.address, '', '', '', '', '')
 
     // await FreeBase.connect(owner).createCollection(Free20.address, '', '', '', '', '')
@@ -1876,12 +1879,97 @@ describe.only('Free Series 2', () => {
   })
 
   describe('Free18', () => {
+    let start, TOMultisig, EditionsContract, TOContract, voters, wowWhale
 
-    it('should work if there are tokens left', async () => {})
+    beforeEach(async () => {
+      start = await snapshot()
 
-    it('should revert if there are no tokens left', async () => {})
+      TOMultisig = await ethers.getContractAt(
+        [
+          'function hashProposal(address target, uint256 value, bytes memory calldata_) external view returns (uint256)',
+          'function propose(uint256 tokenId, address target, uint256 value, bytes memory calldata_) external',
+          'function castVote(uint256 proposalId, uint256 tokenId, bool vote) external',
+          'function execute(address target, uint256 value, bytes memory calldata_) external',
+        ],
+        '0xCBA420f0b43c32a1d49851f6356A37de6EE8e288'
+      )
 
-    it('should revert if non-multisig attempts to increase token count', async () => {})
+      TOContract = await ethers.getContractAt(
+        [
+          'function ownerOf(uint256) external view returns (address)',
+        ],
+        '0x59fAcEa786c01A178f0d5BbEff8BE8bA7091D0bd'
+      )
+
+      EditionsContract = await ethers.getContractAt(
+        ['function safeTransferFrom(address, address, uint256, uint256, bytes) external'],
+        '0x3c6fe936f6e050c243b901d809aea24084674687'
+      )
+
+      voters = [
+        await ethers.getImpersonatedSigner("0x062E0B7846094C24848F9fa3dcD892515e9cA13F"),
+        await ethers.getImpersonatedSigner("0xC3edCBe0F93a6258c3933e86fFaA3bcF12F8D695"),
+        await ethers.getImpersonatedSigner("0xb733E52DFF6D056fad688428D96CfC887b43b5DA"),
+        await ethers.getImpersonatedSigner("0xacE1C6F4DAb142925a3d628C0FA5440c4dEdd815"),
+        await ethers.getImpersonatedSigner("0x2E0a86c23066134B7ba0079f0419D00852048Df1"),
+        await ethers.getImpersonatedSigner("0x9387e04CB6f78c9dcdb793F34C405419e5d619B1"),
+        await ethers.getImpersonatedSigner("0xDE3ba1B41e6c612a3Ca3213B84bdaf598dfFdb9b"),
+      ]
+
+      wowWhale = await ethers.getImpersonatedSigner("0x47144372eb383466d18fc91db9cd0396aa6c87a4")
+      await EditionsContract.connect(wowWhale).safeTransferFrom(wowWhale.address, minter.address, 0, 1, [])
+
+    })
+
+    afterEach(() => start.restore())
+
+    it('should only work if there are tokens left', async () => {
+      expect(Number(await Free18.connect(minter).claimableTokensLeft())).to.equal(0)
+      const incrementClaimableTokensCalldata = encodeWithSignature('incrementClaimableTokens', ['uint256'], [2])
+      const proposalId = await TOMultisig.connect(voters[0]).hashProposal(Free18.address, 0, incrementClaimableTokensCalldata)
+
+      await TOMultisig.connect(voters[0]).propose(0, Free18.address, 0, incrementClaimableTokensCalldata)
+      await Promise.all(voters.slice(1).map((voter, i) => TOMultisig.connect(voter).castVote(proposalId.toString(), i+1, true)))
+      await TOMultisig.connect(voters[0]).execute(Free18.address, 0, incrementClaimableTokensCalldata)
+
+      expect(Number(await Free18.connect(minter).claimableTokensLeft())).to.equal(2)
+
+      const mintFn = (signer, id) => Free18.connect(signer).claim(id)
+      await claim(mintFn, 18, Free18)
+
+      expect(Number(await Free18.connect(minter).claimableTokensLeft())).to.equal(1)
+
+      await Free18.connect(minter).claim(2)
+
+      expect(Number(await Free18.connect(minter).claimableTokensLeft())).to.equal(0)
+
+      await EditionsContract.connect(wowWhale).safeTransferFrom(wowWhale.address, notMinter.address, 0, 1, [])
+      await expectRevert(
+        Free18.connect(notMinter).claim(1),
+        'No tokens left to claim'
+      )
+    })
+
+    it('should revert if claimed by address without a WOW token', async () => {
+      const incrementClaimableTokensCalldata = encodeWithSignature('incrementClaimableTokens', ['uint256'], [2])
+      const proposalId = await TOMultisig.connect(voters[0]).hashProposal(Free18.address, 0, incrementClaimableTokensCalldata)
+
+      await TOMultisig.connect(voters[0]).propose(0, Free18.address, 0, incrementClaimableTokensCalldata)
+      await Promise.all(voters.slice(1).map((voter, i) => TOMultisig.connect(voter).castVote(proposalId.toString(), i+1, true)))
+      await TOMultisig.connect(voters[0]).execute(Free18.address, 0, incrementClaimableTokensCalldata)
+
+      await expectRevert(
+        Free18.connect(notMinter).claim(1),
+        'Must have at least 1 WOW token'
+      )
+    })
+
+    it('should revert if non-multisig attempts to increase token count', async () => {
+      await expectRevert(
+        Free18.connect(notMinter).incrementClaimableTokens(999999),
+        'Can only be called by Terminally Online Multisig'
+      )
+    })
   })
 
   describe('Free19', () => {

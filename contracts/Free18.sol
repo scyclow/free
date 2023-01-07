@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: CC0
 
+import "hardhat/console.sol";
+
 pragma solidity ^0.8.17;
  
 interface IFree {
@@ -9,9 +11,13 @@ interface IFree {
   function appendAttributeToToken(uint256 tokenId, string memory attrKey, string memory attrValue) external;
 }
 
+interface IEditions {
+  function balanceOf(address owner, uint256 tokenId) external view returns (uint256);
+}
 
 contract Free18 {
   IFree public immutable free;
+  IEditions public immutable editions;
   address public terminallyOnlineMultisig;
 
   uint256 public claimableTokensLeft;
@@ -21,10 +27,11 @@ contract Free18 {
   constructor(address freeAddr, address toMultisigAddr, address editionsAddr) {
     free = IFree(freeAddr);
     terminallyOnlineMultisig = toMultisigAddr;
+    editions = IEditions(editionsAddr);
   }
 
   function incrementClaimableTokens(uint256 increment) external {
-    require(msg.sender == terminallyOnlineMultisig, 'Can only be called by TO multisig');
+    require(msg.sender == terminallyOnlineMultisig, 'Can only be called by Terminally Online Multisig');
     claimableTokensLeft += increment;
   }
 
@@ -33,7 +40,8 @@ contract Free18 {
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free18');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    require(claimableTokensLeft >= 0, 'No tokens left to claim');
+    require(editions.balanceOf(msg.sender, 0) >= 1, 'Must have at least 1 WOW token');
+    require(claimableTokensLeft > 0, 'No tokens left to claim');
     claimableTokensLeft -= 1;
 
 
