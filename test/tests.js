@@ -15,6 +15,11 @@ const num = n => Number(ethers.utils.formatEther(n))
 const uint = n => Number(n)
 const parseMetadata = metadata => JSON.parse(Buffer.from(metadata.split(',')[1], 'base64').toString('utf-8'))
 
+function times(t, fn) {
+  const out = []
+  for (let i = 0; i < t; i++) out.push(fn(i))
+  return out
+}
 
 const safeTransferFrom = 'safeTransferFrom(address,address,uint256)'
 
@@ -1042,17 +1047,23 @@ describe.only('Free Series 2', () => {
     Free13 = await Free13Factory.deploy(FreeBase.address)
     await Free13.deployed()
 
-    // const Free14Factory = await ethers.getContractFactory('Free14', owner)
-    // Free14 = await Free14Factory.deploy(FreeBase.address)
-    // await Free14.deployed()
+    const Free14Factory = await ethers.getContractFactory('Free14', owner)
+    Free14 = await Free14Factory.deploy(FreeBase.address, '0x18dE6097cE5B5B2724C9Cae6Ac519917f3F178c0')
+    await Free14.deployed()
 
-    // const Free15Factory = await ethers.getContractFactory('Free15', owner)
-    // Free15 = await Free15Factory.deploy(FreeBase.address)
-    // await Free15.deployed()
+    const Free15Factory = await ethers.getContractFactory('Free15', owner)
+    Free15 = await Free15Factory.deploy(FreeBase.address)
+    await Free15.deployed()
 
-    // const Free16Factory = await ethers.getContractFactory('Free16', owner)
-    // Free16 = await Free16Factory.deploy(FreeBase.address)
-    // await Free16.deployed()
+    const Free16Factory = await ethers.getContractFactory('Free16', owner)
+    Free16 = await Free16Factory.deploy(
+      FreeBase.address,
+      '0xe6da43bcfa2ae0ed8c6ac4b3beea1ec9ae65daba',
+      '0xbd1ca111380b436350034c7040e7c44949605702',
+      '0xf49b26cf118db11a7dd1d9b88c7e1bc153851757',
+      '0x495f947276749Ce646f68AC8c248420045cb7b5e'
+    )
+    await Free16.deployed()
 
     // const Free17Factory = await ethers.getContractFactory('Free17', owner)
     // Free17 = await Free17Factory.deploy(FreeBase.address)
@@ -1083,15 +1094,9 @@ describe.only('Free Series 2', () => {
     await FreeBase.connect(owner).createCollection(Free11.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free12.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free13.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free14.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free15.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free16.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free14.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free15.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free16.address, '', '', '', '', '')
 
     // await FreeBase.connect(owner).createCollection(Free17.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
@@ -1209,9 +1214,7 @@ describe.only('Free Series 2', () => {
         )
       })
     }
-
   })
-
 
   describe('Free8', () => {
     let mapWallet, noMapWallet
@@ -1366,7 +1369,6 @@ describe.only('Free Series 2', () => {
         '10 ETH Giveaway token has been redeemed'
       )
     })
-
   })
 
   describe('Free11', () => {
@@ -1503,7 +1505,7 @@ describe.only('Free Series 2', () => {
     })
   })
 
-  describe.only('Free13', () => {
+  describe('Free13', () => {
 
     it('should work if timestamp is a friday (UTC) and base gas is <= 5', async () => {
 
@@ -1525,30 +1527,258 @@ describe.only('Free Series 2', () => {
   })
 
   describe('Free14', () => {
+    let plottablesWhale, plottablesAdmin, plottablesArtist, PlottablesContract, start
+    beforeEach(async () => {
+      start = await snapshot()
+      plottablesAdmin = await ethers.getImpersonatedSigner('0x9f75C11383f5b93a72c61fb1Dd1a44f5Ec7e4187')
+      plottablesWhale = await ethers.getImpersonatedSigner('0xF565d79c35758c752d3DebFdD380D4Eb16A3c6E3')
+      plottablesArtist = await ethers.getImpersonatedSigner('0x47144372eb383466D18FC91DB9Cd0396Aa6c87A4')
 
-    it('should work if a IFD is swapped', async () => {})
+      PlottablesContract = await ethers.getContractAt(
+        [
+          'function safeTransferFrom(address, address, uint256) external',
+          'function addProject(string, address, uint256) external',
+          'function mint(address, uint256, address) external',
+          'function addMintWhitelisted(address) external',
+          'function approve(address, uint256) external',
+          'function ownerOf(uint256) external view returns (address)',
+        ],
+        '0x18dE6097cE5B5B2724C9Cae6Ac519917f3F178c0'
+      )
 
-    it('should revert if IFD has bee used before', async () => {})
+      await PlottablesContract.connect(plottablesWhale).safeTransferFrom(plottablesWhale.address, minter.address, 218)
+      await PlottablesContract.connect(plottablesWhale).safeTransferFrom(plottablesWhale.address, minter.address, 219)
+    })
 
-    it('should revert if IFD not owned', async () => {})
+    afterEach(() => start.restore())
 
-    it('should revert if owned, but not IFD', async () => {})
+    it('should work if a IFD is swapped', async () => {
+      await PlottablesContract.connect(plottablesArtist).approve(Free14.address, 0)
+      await Free14.connect(plottablesArtist).seed(0)
+
+      await PlottablesContract.connect(minter).approve(Free14.address, 218)
+      await PlottablesContract.connect(minter).approve(Free14.address, 219)
+
+      const mintFn = (signer, id) => Free14.connect(signer).claim(id, 218)
+      await claim(mintFn, 14, Free14)
+
+      expect(await PlottablesContract.connect(minter).ownerOf(0)).to.equal(minter.address)
+      expect(await PlottablesContract.connect(minter).ownerOf(218)).to.equal(Free14.address)
+
+      await Free14.connect(minter).claim(2, 219)
+      expect(await PlottablesContract.connect(minter).ownerOf(218)).to.equal(minter.address)
+      expect(await PlottablesContract.connect(minter).ownerOf(219)).to.equal(Free14.address)
+      expect(Number(await Free14.connect(minter).activeInstruction())).to.equal(219)
+      expect(await Free14.connect(minter).instructionsUsed(218)).to.equal(true)
+      expect(await Free14.connect(minter).instructionsUsed(219)).to.equal(true)
+      expect(await Free14.connect(minter).instructionsUsed(220)).to.equal(false)
+    })
+
+    it('should revert if no IFD has been seeded', async () => {
+      await PlottablesContract.connect(minter).approve(Free14.address, 218)
+      await expectRevert(
+        Free14.connect(minter).claim(0, 218),
+        'Free14 has not been seeded'
+      )
+
+    })
+
+    it('should revert if IFD has been used before', async () => {
+      await PlottablesContract.connect(plottablesArtist).approve(Free14.address, 0)
+      await Free14.connect(plottablesArtist).seed(0)
+
+      await PlottablesContract.connect(minter).approve(Free14.address, 218)
+      await PlottablesContract.connect(minter).approve(Free14.address, 219)
+
+      await Free14.connect(minter).claim(0, 218)
+      await Free14.connect(minter).claim(2, 219)
+
+      await PlottablesContract.connect(minter)[safeTransferFrom](minter.address, notMinter.address, 218)
+
+      await expectRevert(
+        Free14.connect(notMinter).claim(1, 218),
+        'This Instruction has already been used'
+      )
+
+    })
+
+    it('should revert if IFD not owned', async () => {
+      await PlottablesContract.connect(plottablesArtist).approve(Free14.address, 0)
+      await Free14.connect(plottablesArtist).seed(0)
+
+      await expectRevert(
+        Free14.connect(notMinter).claim(1, 218),
+        'ERC721: transfer caller is not owner nor approved'
+      )
+    })
+
+    it('should revert if owned, but not IFD', async () => {
+      await PlottablesContract.connect(plottablesArtist).approve(Free14.address, 0)
+      await Free14.connect(plottablesArtist).seed(0)
+
+      await PlottablesContract.connect(plottablesAdmin).addMintWhitelisted(plottablesAdmin.address)
+      await PlottablesContract.connect(plottablesAdmin).addProject('test', plottablesAdmin.address, 1000)
+      await PlottablesContract.connect(plottablesAdmin).mint(plottablesAdmin.address, 1, plottablesAdmin.address)
+      await PlottablesContract.connect(plottablesAdmin).safeTransferFrom(plottablesAdmin.address, notMinter.address, 1000000)
+
+      await expectRevert(
+        Free14.connect(notMinter).claim(1, 1000000),
+        'Invalid Instruction for Defacement'
+      )
+    })
   })
 
   describe('Free15', () => {
+    let start
+    beforeEach(async () => {
+      start = await snapshot()
+    })
 
-    it('should work if free bas total supply is an even multiple of 100 + if the block number is also an even multiple of 100', async () => {})
+    afterEach(() => start.restore())
 
-    it('should revert if free bas total supply is not an even multiple of 100 + if the block number is an even multiple of 100', async () => {})
+    it('should work if free base total supply is an even multiple of 100 + if the block number is also an even multiple of 100', async () => {
+      await Promise.all(times(94, () => Free0.connect(minter).claim())) // totalSupply is now 98
+      await time.advanceBlockTo(16335599) // next block is 16335600
+      const mintFn = (signer, id) => Free15.connect(signer).claim(id)
+      await claim(mintFn, 15, Free15, 98) // totalSupply is now 99
 
-    it('should revert if free bas total supply is an even multiple of 100 + if the block number is not an even multiple of 100', async () => {})
+      await time.advanceBlockTo(16335698) // next block is 16335699
+      await Free15.connect(minter).claim(2)
+    })
+
+    it('should revert if free base total supply is not an even multiple of 100 + if the block number is an even multiple of 100', async () => {
+      await Promise.all(times(96, () => Free0.connect(minter).claim())) // totalSupply is now 100
+      await time.advanceBlockTo(16335599) // next block is 16335600
+      await expectRevert(
+        Free15.connect(notMinter).claim(1),
+        'Invalid total Free count'
+      )
+    })
+
+    it('should revert if free base total supply is an even multiple of 100 + if the block number is not an even multiple of 100', async () => {
+      await Promise.all(times(94, () => Free0.connect(minter).claim())) // totalSupply is now 98
+      await time.advanceBlockTo(16335699) // next block is 16335700
+      await expectRevert(
+        Free15.connect(notMinter).claim(1),
+        'Invalid block number'
+      )
+      await time.advanceBlockTo(16335798) // next block is 16335799
+
+      await expectRevert(
+        Free15.connect(notMinter).claim(1),
+        'Invalid block number'
+      )
+    })
   })
 
-  describe('Free16', () => {
+  describe.only('Free16', () => {
+    let start, OSStorefrontContract, NVCContract, NFContract, UFIMContract
+    let winnerWhale, loserWhale, nvcWhale, nfWhale, uFimWhale1, uFimWhale2
+    beforeEach(async () => {
+      start = await snapshot()
 
-    it('should work if the owner has all the shit', async () => {})
+      // .safeTransferFrom(disciple1.address, Jesus.address, id, 1, [])
+      OSStorefrontContract = await ethers.getContractAt(
+        ['function safeTransferFrom(address, address, uint256, uint256, bytes) external'],
+        '0x495f947276749Ce646f68AC8c248420045cb7b5e'
+      )
 
-    it('should revert if the owner is missing any of all the shit', async () => {})
+      NVCContract = await ethers.getContractAt(
+        ['function safeTransferFrom(address, address, uint256) external'],
+        '0xe6da43bcfa2ae0ed8c6ac4b3beea1ec9ae65daba'
+      )
+      NFContract = await ethers.getContractAt(
+        ['function safeTransferFrom(address, address, uint256) external'],
+        '0xbd1ca111380b436350034c7040e7c44949605702'
+      )
+      UFIMContract = await ethers.getContractAt(
+        ['function safeTransferFrom(address, address, uint256) external'],
+        '0xf49b26cf118db11a7dd1d9b88c7e1bc153851757'
+      )
+
+      const nvcWhale = await ethers.getImpersonatedSigner("0x6266dBB2d202D4E246ee86d76bB2FBB9a71eAFCD")
+      const nfWhale = await ethers.getImpersonatedSigner("0x47144372eb383466d18fc91db9cd0396aa6c87a4")
+      const uFimWhale1 = await ethers.getImpersonatedSigner("0xbc3Ced9089e13C29eD15e47FFE3e0cAA477cb069")
+      const uFimWhale2 = await ethers.getImpersonatedSigner("0x994da0c3437a823F9e47dE448B62397D1bDfDdBa")
+      const winnerWhale = await ethers.getImpersonatedSigner("0x9E1e3857fb2484379858B9dAF230379015A7A100")
+      const loserWhale = await ethers.getImpersonatedSigner("0xEed4242F735Fa70eD1cf30DEAE41efb793Ea01f0")
+
+
+      await Promise.all(
+        [69, 215, 231, 64, 214, 219, 67, 95, 105, 174, 220, 248, 157, 164, 77, 166, 143, 153, 119].map(
+          id => NVCContract.connect(nvcWhale).safeTransferFrom(nvcWhale.address, minter.address, id)
+        )
+      )
+      await NVCContract.connect(nfWhale).safeTransferFrom(nfWhale.address, minter.address, 1)
+
+      await Promise.all(
+        [19, 25, 29, 48, 49].map(
+          id => NFContract.connect(nfWhale).safeTransferFrom(nfWhale.address, minter.address, id)
+        )
+      )
+
+      await Promise.all(
+        [17, 14, 3, 15].map(
+          id => UFIMContract.connect(uFimWhale1).safeTransferFrom(uFimWhale1.address, minter.address, id)
+        )
+      )
+      await UFIMContract.connect(uFimWhale2).safeTransferFrom(uFimWhale2.address, minter.address, 20)
+
+      await OSStorefrontContract.connect(winnerWhale).safeTransferFrom(winnerWhale.address, minter.address, '108025279282686658453897007890629891637526310304717906993258638098494503518261', 3, [])
+      await OSStorefrontContract.connect(loserWhale).safeTransferFrom(loserWhale.address, minter.address, '108025279282686658453897007890629891637526310304717906993258638097394991890485', 3, [])
+
+    })
+
+    afterEach(() => start.restore())
+
+    it('should work if the owner has all the shit', async () => {
+      const mintFn = (signer, id) => Free16.connect(signer).claim(id)
+      await claim(mintFn, 16, Free16)
+
+      // should also work multiple times
+      await Free16.connect(minter).claim(2)
+    })
+
+    it('should revert if the owner is missing a nvc', async () => {
+      await NVCContract.connect(minter).safeTransferFrom(minter.address, notMinter.address, 69)
+
+      await expectRevert(
+        Free16.connect(minter).claim(0),
+        'Must have at least 20 NVCs'
+      )
+    })
+
+    it('should revert if the owner is missing a nf', async () => {
+      await NFContract.connect(minter).safeTransferFrom(minter.address, notMinter.address, 19)
+      await expectRevert(
+        Free16.connect(minter).claim(0),
+        'Must have at least 5 NFs'
+      )
+    })
+
+    it('should revert if the owner is missing a ufim', async () => {
+      await UFIMContract.connect(minter).safeTransferFrom(minter.address, notMinter.address, 17)
+      await expectRevert(
+        Free16.connect(minter).claim(0),
+        'Must have at least 5 UFIMs'
+      )
+    })
+
+    it('should revert if the owner is missing a winner', async () => {
+      await OSStorefrontContract.connect(minter).safeTransferFrom(minter.address, notMinter.address, '108025279282686658453897007890629891637526310304717906993258638098494503518261', 1, [])
+      await expectRevert(
+        Free16.connect(minter).claim(0),
+        'Must have at least 3 WINNERs'
+      )
+    })
+
+    it('should revert if the owner is missing a loser', async () => {
+      await OSStorefrontContract.connect(minter).safeTransferFrom(minter.address, notMinter.address, '108025279282686658453897007890629891637526310304717906993258638097394991890485', 1, [])
+      await expectRevert(
+        Free16.connect(minter).claim(0),
+        'Must have at least 3 LOSERs'
+      )
+    })
   })
 
   describe('Free17', () => {

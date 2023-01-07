@@ -27,12 +27,12 @@ contract Free16 {
 
   mapping(uint256 => bool) public free0TokenIdUsed;
 
-  constructor(address freeAddr, address osStorefrontAddr, address nvcAddr, address nfAddr, address ufimAddr) {
+  constructor(address freeAddr, address nvcAddr, address nfAddr, address ufimAddr, address osStorefrontAddr) {
     free = IFree(freeAddr);
-    osStorefront = IERC1155(osStorefrontAddr);
     nvc = IERC721(nvcAddr);
     nf = IERC721(nfAddr);
     ufim = IERC721(ufimAddr);
+    osStorefront = IERC1155(osStorefrontAddr);
   }
 
   function claim(uint256 free0TokenId) public {
@@ -40,11 +40,11 @@ contract Free16 {
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free16');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    require(osStorefront.balanceOf(msg.sender, 108025279282686658453897007890629891637526310304717906993258638098494503518261) >= 3, 'Must have at least 3 WINNER tokens');
-    require(osStorefront.balanceOf(msg.sender, 108025279282686658453897007890629891637526310304717906993258638097394991890485) >= 3, 'Must have at least 3 LOSER tokens');
-    require(nvc.balanceOf(msg.sender) >= 10, 'Must have at least 10 NVCs');
-    require(nf.balanceOf(msg.sender) >= 10, 'Must have at least 5 NFs');
-    require(ufim.balanceOf(msg.sender) >= 10, 'Must have at least 2 UFIMs');
+    require(nvc.balanceOf(msg.sender) >= 20, 'Must have at least 20 NVCs');
+    require(nf.balanceOf(msg.sender) >= 5, 'Must have at least 5 NFs');
+    require(ufim.balanceOf(msg.sender) >= 5, 'Must have at least 5 UFIMs');
+    require(osStorefront.balanceOf(msg.sender, 108025279282686658453897007890629891637526310304717906993258638098494503518261) >= 3, 'Must have at least 3 WINNERs');
+    require(osStorefront.balanceOf(msg.sender, 108025279282686658453897007890629891637526310304717906993258638097394991890485) >= 3, 'Must have at least 3 LOSERs');
 
     free0TokenIdUsed[free0TokenId] = true;
     free.appendAttributeToToken(free0TokenId, 'Used For Free16 Mint', 'true');

@@ -11,6 +11,7 @@ interface IFree {
 
 interface IPlottables {
   function transferFrom(address from, address to, uint256 tokenId) external;
+  function tokenIdToProjectId(uint256 tokenId) external returns (uint256 projectId);
 }
 
 
@@ -21,7 +22,7 @@ contract Free14 {
   mapping(uint256 => bool) public instructionsUsed;
   bool public seeded;
 
-  uint256 activeInstruction;
+  uint256 public activeInstruction;
 
   constructor(address freeAddr, address plottablesAddr) {
     free = IFree(freeAddr);
@@ -42,7 +43,9 @@ contract Free14 {
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free14');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
+    require(seeded, 'Free14 has not been seeded');
     require(!instructionsUsed[instructionTokenId], 'This Instruction has already been used');
+    require(plottables.tokenIdToProjectId(instructionTokenId) == 0, 'Invalid Instruction for Defacement');
 
     plottables.transferFrom(msg.sender, address(this), instructionTokenId);
     plottables.transferFrom(address(this), msg.sender, activeInstruction);
