@@ -1065,18 +1065,22 @@ describe.only('Free Series 2', () => {
     )
     await Free16.deployed()
 
-    // const Free17Factory = await ethers.getContractFactory('Free17', owner)
-    // Free17 = await Free17Factory.deploy(FreeBase.address)
-    // await Free17.deployed()
+    const Free17Factory = await ethers.getContractFactory('Free17', owner)
+    Free17 = await Free17Factory.deploy(FreeBase.address, '0x4f9e2e709895cc8ae62be86c6289f7081ba048a6')
+    await Free17.deployed()
 
 
     // const Free18Factory = await ethers.getContractFactory('Free18', owner)
     // Free18 = await Free18Factory.deploy(FreeBase.address)
     // await Free18.deployed()
 
-    // const Free19Factory = await ethers.getContractFactory('Free19', owner)
-    // Free19 = await Free19Factory.deploy(FreeBase.address)
-    // await Free19.deployed()
+    const Free19Factory = await ethers.getContractFactory('Free19', owner)
+    Free19 = await Free19Factory.deploy(FreeBase.address)
+    await Free19.deployed()
+
+    // const Free20Factory = await ethers.getContractFactory('Free20', owner)
+    // Free20 = await Free20Factory.deploy(FreeBase.address)
+    // await Free20.deployed()
 
 
     await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
@@ -1097,25 +1101,22 @@ describe.only('Free Series 2', () => {
     await FreeBase.connect(owner).createCollection(Free14.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free15.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free16.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free17.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free17.address, '', '', '', '', '')
 
     // await FreeBase.connect(owner).createCollection(Free18.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
 
-    // await FreeBase.connect(owner).createCollection(Free19.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
+    await FreeBase.connect(owner).createCollection(Free19.address, '', '', '', '', '')
 
     // await FreeBase.connect(owner).createCollection(Free20.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
 
 
-    await Free0.connect(minter).claim()
-    await Free0.connect(notMinter).claim()
+    await Free0.connect(minter).claim() // 0
+    await Free0.connect(notMinter).claim() // 1
 
-    await Free0.connect(minter).claim()
-    await Free1.connect(minter).claim(2)
+    await Free0.connect(minter).claim() // 2
+    await Free1.connect(minter).claim(2) // 3
   })
 
 
@@ -1671,13 +1672,11 @@ describe.only('Free Series 2', () => {
     })
   })
 
-  describe.only('Free16', () => {
+  describe('Free16', () => {
     let start, OSStorefrontContract, NVCContract, NFContract, UFIMContract
-    let winnerWhale, loserWhale, nvcWhale, nfWhale, uFimWhale1, uFimWhale2
     beforeEach(async () => {
       start = await snapshot()
 
-      // .safeTransferFrom(disciple1.address, Jesus.address, id, 1, [])
       OSStorefrontContract = await ethers.getContractAt(
         ['function safeTransferFrom(address, address, uint256, uint256, bytes) external'],
         '0x495f947276749Ce646f68AC8c248420045cb7b5e'
@@ -1782,18 +1781,98 @@ describe.only('Free Series 2', () => {
   })
 
   describe('Free17', () => {
+    let start, SJPContract, sjpWhale
 
-    it('should work if the Free0 has at least 3 blessings', async () => {})
+    beforeEach(async () => {
+      start = await snapshot()
 
-    it('should refert if the Free0 has at less than 3 blessings', async () => {})
+      SJPContract = await ethers.getContractAt(
+        ['function safeTransferFrom(address, address, uint256) external'],
+        '0x4f9e2e709895cc8ae62be86c6289f7081ba048a6'
+      )
 
-    it('blessing should revert if non owner of jesus pamphlet', async () => {})
+      sjpWhale = await ethers.getImpersonatedSigner("0x47144372eb383466d18fc91db9cd0396aa6c87a4")
 
-    it('blessing should revert if its a non-upgraded pamphlet', async () => {})
+    })
 
-    it('blessing should revert if > 5 blessings', async () => {})
+    afterEach(() => start.restore())
 
-    it('blessing should revert if blessing a non Free0', async () => {})
+    it('should work if the Free0 has at least 3 blessings', async () => {
+      await Free17.connect(sjpWhale).bless(0, 75)
+      await Free17.connect(sjpWhale).bless(0, 65)
+      await Free17.connect(sjpWhale).bless(0, 53)
+
+      await Free17.connect(sjpWhale).bless(1, 75)
+      await Free17.connect(sjpWhale).bless(1, 65)
+      await Free17.connect(sjpWhale).bless(1, 53)
+
+      const mintFn = (signer, id) => Free17.connect(signer).claim(id)
+      await claim(mintFn, 17, Free17)
+
+      await Free17.connect(notMinter).claim(1)
+    })
+
+    it('should revert if the Free0 has at less than 3 blessings', async () => {
+      await Free17.connect(sjpWhale).bless(0, 75)
+      await Free17.connect(sjpWhale).bless(0, 65)
+
+      await expectRevert(
+        Free17.connect(minter).claim(0),
+        'Free0 must have at least 3 blessings'
+      )
+    })
+
+    it('blessing should revert if non owner of jesus pamphlet', async () => {
+      await expectRevert(
+        Free17.connect(minter).bless(0, 75),
+        'You must own this Pamphlet'
+      )
+    })
+
+    it('blessing should revert if its a non-upgraded pamphlet (id != 1-75)', async () => {
+      await expectRevert(
+        Free17.connect(sjpWhale).bless(0, 0),
+        'Invalid Pamphlet'
+      )
+
+      await expectRevert(
+        Free17.connect(sjpWhale).bless(0, 86),
+        'Invalid Pamphlet'
+      )
+    })
+
+    it('blessing should revert if > 5 blessings', async () => {
+      await Free0.connect(sjpWhale).claim() // 4
+      await Free0.connect(sjpWhale).claim() // 5
+      await Free0.connect(sjpWhale).claim() // 6
+      await Free0.connect(sjpWhale).claim() // 7
+
+      await Free17.connect(sjpWhale).bless(0, 75)
+      await Free17.connect(sjpWhale).bless(1, 75)
+      await Free17.connect(sjpWhale).bless(4, 75)
+      await Free17.connect(sjpWhale).bless(5, 75)
+      await Free17.connect(sjpWhale).bless(6, 75)
+
+      await expectRevert(
+        Free17.connect(sjpWhale).bless(7, 75),
+        'This pamphlet has blessed too many times'
+      )
+    })
+
+    it('blessing should revert if blessing a non Free0', async () => {
+      await expectRevert(
+        Free17.connect(sjpWhale).bless(3, 75),
+        'Invalid Free0'
+      )
+    })
+
+    it('blessing should revert if blessing same Free0 multiple times', async () => {
+      await Free17.connect(sjpWhale).bless(0, 75)
+      await expectRevert(
+        Free17.connect(sjpWhale).bless(0, 75),
+        'This pamphlet has already blessed this token'
+      )
+    })
   })
 
   describe('Free18', () => {
@@ -1806,12 +1885,35 @@ describe.only('Free Series 2', () => {
   })
 
   describe('Free19', () => {
+    it('should work if claimer has been claimer for 24 hours or more', async () => {
+      await Free19.connect(minter).assign(minter.address)
+      await Free19.connect(notMinter).assign(notMinter.address)
+      await Free19.connect(minter).assign(minter.address)
 
-    it('should work if claimer has been claimer for 24 hours or more', async () => {})
+      await time.increase(time.duration.days(1))
 
-    it('should revert if not the claimer, but claimer has been active for 24 hours or more', async () => {})
+      const mintFn = (signer, id) => Free19.connect(signer).claim(id)
+      await claim(mintFn, 19, Free19)
+    })
 
-    it('should revert if claimer has been claimer for less than 24 hours', async () => {})
+    it('should revert if not the claimer, but claimer has been active for 24 hours or more', async () => {
+      await Free19.connect(minter).assign(minter.address)
+      await time.increase(time.duration.days(1))
+
+      await expectRevert(
+        Free19.connect(notMinter).claim(1),
+        'You must be the claimer'
+      )
+    })
+
+    it('should revert if claimer has been claimer for less than 24 hours', async () => {
+      await Free19.connect(minter).assign(minter.address)
+      await time.increase(time.duration.days(0.95))
+      await expectRevert(
+        Free19.connect(minter).claim(0),
+        'You must wait at least 1 day after the most recent assignment'
+      )
+    })
   })
 
   describe('Free20', () => {

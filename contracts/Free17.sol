@@ -27,13 +27,16 @@ contract Free17 {
     subwayJesusPamphlets = ISubwayJesusPamphlets(sjpAddr);
   }
 
-  function hashBlessing(uint256 sjpTokenId, uint256 free0TokenId) public view returns (bytes32) {
+  function hashBlessing(uint256 free0TokenId, uint256 sjpTokenId) public pure returns (bytes32) {
     return keccak256(abi.encodePacked(sjpTokenId, free0TokenId));
   }
 
-  function bless(uint256 sjpTokenId, uint256 free0TokenId) external {
+  function bless(uint256 free0TokenId, uint256 sjpTokenId) external {
     require(subwayJesusPamphlets.ownerOf(sjpTokenId) == msg.sender, 'You must own this Pamphlet');
     require(sjpBlessings[sjpTokenId] < 5, 'This pamphlet has blessed too many times');
+    require(sjpTokenId > 0 && sjpTokenId < 76, 'Invalid Pamphlet');
+    require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
+
     bytes32 hashedBlessing = hashBlessing(sjpTokenId, free0TokenId);
     require(!blessings[hashedBlessing], 'This pamphlet has already blessed this token');
 
