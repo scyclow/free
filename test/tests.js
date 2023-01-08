@@ -1001,6 +1001,8 @@ describe.only('Free Series 2', () => {
     await Free1.deployed()
 
     const MockFreeFactory = await ethers.getContractFactory('MockFree', owner)
+    const LowercaseMockFreeFactory = await ethers.getContractFactory('LowercaseMockFree', owner)
+
     MockFree2 = await MockFreeFactory.deploy(FreeBase.address, 2)
     await MockFree2.deployed()
 
@@ -1010,7 +1012,6 @@ describe.only('Free Series 2', () => {
     MockFree4 = await MockFreeFactory.deploy(FreeBase.address, 4)
     await MockFree4.deployed()
 
-    const LowercaseMockFreeFactory = await ethers.getContractFactory('LowercaseMockFree', owner)
     MockFree5 = await LowercaseMockFreeFactory.deploy(FreeBase.address, 5)
     await MockFree5.deployed()
 
@@ -1084,9 +1085,9 @@ describe.only('Free Series 2', () => {
     Free19 = await Free19Factory.deploy(FreeBase.address)
     await Free19.deployed()
 
-    // const Free20Factory = await ethers.getContractFactory('Free20', owner)
-    // Free20 = await Free20Factory.deploy(FreeBase.address)
-    // await Free20.deployed()
+    const Free20Factory = await ethers.getContractFactory('Free20', owner)
+    Free20 = await Free20Factory.deploy(FreeBase.address)
+    await Free20.deployed()
 
 
     await FreeBase.connect(owner).createCollection(Free0.address, '', '', '', '', '')
@@ -1110,10 +1111,7 @@ describe.only('Free Series 2', () => {
     await FreeBase.connect(owner).createCollection(Free17.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free18.address, '', '', '', '', '')
     await FreeBase.connect(owner).createCollection(Free19.address, '', '', '', '', '')
-
-    // await FreeBase.connect(owner).createCollection(Free20.address, '', '', '', '', '')
-    await FreeBase.connect(owner).createCollection(owner.address, '', '', '', '', '')
-
+    await FreeBase.connect(owner).createCollection(Free20.address, '', '', '', '', '')
 
     await Free0.connect(minter).claim() // 0
     await Free0.connect(notMinter).claim() // 1
@@ -1125,17 +1123,13 @@ describe.only('Free Series 2', () => {
 
 
   async function preCheck(mintFn, freeNumber) {
-    // await expectFailure(() => mintFn(minter, 3), 'Invalid Free0')
+    await expectFailure(() => mintFn(minter, 3), 'Invalid Free0')
     await expectFailure(() => mintFn(notMinter, 0), 'You must be the owner of this Free0')
-
   }
 
-  async function postCheck(mintFn, freeNumber, freeContract, newestTokenId=4) {
-    await expectFailure(() => mintFn(minter, 0), 'This Free0 has already been used to mint a Free'+freeNumber)
-    expect(await freeContract.connect(owner).free0TokenIdUsed(0)).to.equal(true)
-    expect(await FreeBase.connect(owner).ownerOf(newestTokenId)).to.equal(minter.address)
 
-    const metadata0 = parseMetadata(await FreeBase.connect(owner).tokenURI(0))
+  async function expectMetadataToBeCorrect(tokenId, freeNumber) {
+    const metadata0 = parseMetadata(await FreeBase.connect(owner).tokenURI(tokenId))
     expect(metadata0.name).to.equal('0')
     expect(metadata0.description).to.equal('')
     expect(metadata0.license).to.equal('CC0')
@@ -1143,6 +1137,14 @@ describe.only('Free Series 2', () => {
     expect(metadata0.external_url).to.equal('?collectionId=0&tokenId=0')
     expect(metadata0.attributes).to.deep.include({ trait_type: 'Collection', value: '0' })
     expect(metadata0.attributes).to.deep.include({ trait_type: `Used For Free${freeNumber} Mint`, value: true })
+  }
+
+  async function postCheck(mintFn, freeNumber, freeContract, newestTokenId=4) {
+    await expectFailure(() => mintFn(minter, 0), 'This Free0 has already been used to mint a Free'+freeNumber)
+    expect(await freeContract.connect(owner).free0TokenIdUsed(0)).to.equal(true)
+    expect(await FreeBase.connect(owner).ownerOf(newestTokenId)).to.equal(minter.address)
+
+    expectMetadataToBeCorrect(0, freeNumber)
   }
 
   async function claim(mintFn, freeNumber, freeContract, newestTokenId=4) {
@@ -1253,10 +1255,14 @@ describe.only('Free Series 2', () => {
   })
 
   describe('Free9', () => {
+    let start
     let RPAAMinterContract
     beforeEach(async () => {
+      start = await snapshot()
       RPAAMinterContract = await ethers.getContractAt(['function mint(uint256 amount) external payable'], '0x66C4d7050dcD4a4CcAc59009A77B9ed44EFdf086')
     })
+
+    afterEach(() => start.restore())
 
     it('should work if the minter has exactly 10 RPAA', async () => {
       await RPAAMinterContract.connect(minter).mint(10, {
@@ -1459,7 +1465,6 @@ describe.only('Free Series 2', () => {
     })
   })
 
-
   describe('Free12', () => {
     it('should work for a 0x123456789 address', async () => {
       const minedSigner = await ethers.getImpersonatedSigner("0x123456789ea900fa2b585dd299e03d12fa4293bc");
@@ -1510,6 +1515,12 @@ describe.only('Free Series 2', () => {
   })
 
   describe('Free13', () => {
+    let start
+    beforeEach(async () => {
+      start = await snapshot()
+    })
+
+    afterEach(() => start.restore())
 
     it('should work if timestamp is a friday (UTC) and base gas is <= 5', async () => {
 
@@ -1642,17 +1653,17 @@ describe.only('Free Series 2', () => {
 
     it('should work if free base total supply is an even multiple of 100 + if the block number is also an even multiple of 100', async () => {
       await Promise.all(times(94, () => Free0.connect(minter).claim())) // totalSupply is now 98
-      await time.advanceBlockTo(16335599) // next block is 16335600
+      await time.advanceBlockTo(16345599) // next block is 16345600
       const mintFn = (signer, id) => Free15.connect(signer).claim(id)
       await claim(mintFn, 15, Free15, 98) // totalSupply is now 99
 
-      await time.advanceBlockTo(16335698) // next block is 16335699
+      await time.advanceBlockTo(16345698) // next block is 16345699
       await Free15.connect(minter).claim(2)
     })
 
     it('should revert if free base total supply is not an even multiple of 100 + if the block number is an even multiple of 100', async () => {
       await Promise.all(times(96, () => Free0.connect(minter).claim())) // totalSupply is now 100
-      await time.advanceBlockTo(16335599) // next block is 16335600
+      await time.advanceBlockTo(16345599) // next block is 16345600
       await expectRevert(
         Free15.connect(notMinter).claim(1),
         'Invalid total Free count'
@@ -1661,12 +1672,12 @@ describe.only('Free Series 2', () => {
 
     it('should revert if free base total supply is an even multiple of 100 + if the block number is not an even multiple of 100', async () => {
       await Promise.all(times(94, () => Free0.connect(minter).claim())) // totalSupply is now 98
-      await time.advanceBlockTo(16335699) // next block is 16335700
+      await time.advanceBlockTo(16345699) // next block is 16345700
       await expectRevert(
         Free15.connect(notMinter).claim(1),
         'Invalid block number'
       )
-      await time.advanceBlockTo(16335798) // next block is 16335799
+      await time.advanceBlockTo(16345798) // next block is 16345799
 
       await expectRevert(
         Free15.connect(notMinter).claim(1),
@@ -2004,44 +2015,248 @@ describe.only('Free Series 2', () => {
     })
   })
 
-  describe('Free20', () => {
+
+  FREE20_TEST_ADJ = 1
+  // FREE20_TEST_ADJ = 100
+
+  // this will take for fucking ever unless test_adj == 100
+  describe.skip('Free20', () => {
+    const stakeValue = { value: ethers.utils.parseEther('0.5') }
+    const resignation = 2000000 / FREE20_TEST_ADJ
+    const stakePeriod = 200000 / FREE20_TEST_ADJ
+    const claimWindow = 2000 / FREE20_TEST_ADJ
+
+    let start
+    beforeEach(async () => {
+      start = await snapshot()
+    })
+
+    afterEach(() => start.restore())
+
     describe('first attempt', () => {
+      it('happy path', async () => {
+        await expectRevert(
+          Free20.connect(minter).stake(3, stakeValue),
+          'Invalid Free0'
+        )
 
-      it('stake, wait 200000 blocks, claim within 1000 blocks should work + return staked eth', async () => {})
+        await expectRevert(
+          Free20.connect(notMinter).stake(0, stakeValue),
+          'You must be the owner of this Free0'
+        )
 
-      it('shoudl revert if within window, but already unstaked', async () => {})
+        const startingBalance = num(await minter.getBalance())
 
-      it('should revert if withdraw attempted before window', async () => {})
+        await FreeBase.connect(minter).approve(Free20.address, 0)
+        await Free20.connect(minter).stake(0, stakeValue)
 
-      it('should revert if withdraw is attempted after window', async () => {})
+        await expectRevert(
+          Free20.connect(minter).stake(0, stakeValue),
+          'This token is already being staked'
+        )
 
-      it('should revert if attempting to stake an already staked token', async () => {})
+        const middleBalance = num(await minter.getBalance())
 
-      it('should revert if attempting to stake a non-free0', async () => {})
+        expect(await FreeBase.connect(minter).ownerOf(0)).to.equal(Free20.address)
+        expect(await Free20.connect(minter).free0TokenIdUsed(0)).to.equal(false)
 
-      it('should revert if attempting to stake a non-owned free0', async () => {})
+        await expectRevert(
+          Free20.connect(minter).claim(0),
+          'You can only claim within the claim window'
+        )
 
-      it('should revert if attempting to stake an already used free0', async () => {})
+        const [blockNumber, claimBlockNumber, totalStaked, attempt, staker] = await Free20.connect(minter).free0ToStakes(0)
+
+        expect(staker).to.equal(minter.address)
+        expect(Number(attempt)).to.equal(1)
+        expect(totalStaked.toString()).to.equal(ethers.utils.parseEther('0.5'))
+
+        expect(await Free20.connect(minter).isStaking(0)).to.equal(true)
+
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod)
+
+        expect(await Free20.connect(minter).isStaking(0)).to.equal(false)
+
+        await expectRevert(
+          Free20.connect(notMinter).claim(0),
+          'You must be the original staker'
+        )
+
+        await Free20.connect(minter).claim(0)
+
+        const afterStake = await Free20.connect(minter).free0ToStakes(0)
+        expect(Number(afterStake[2])).to.equal(0)
+
+        const endingBalance = num(await minter.getBalance())
+
+        await expectRevert(
+          Free20.connect(minter).claim(0),
+          'You have already claimed'
+        )
+
+        expect(await FreeBase.connect(minter).ownerOf(0)).to.equal(minter.address)
+        expect(await FreeBase.connect(minter).ownerOf(4)).to.equal(minter.address)
+        expect(await Free20.connect(minter).free0TokenIdUsed(0)).to.equal(true)
+        await expectMetadataToBeCorrect(0, 20)
+
+        await expectRevert(
+          Free20.connect(minter).stake(0, stakeValue),
+          'This Free0 has already been used to mint a Free20'
+        )
+
+        expect(middleBalance).to.be.closeTo(startingBalance - 0.5, 0.001)
+        expect(endingBalance).to.be.closeTo(startingBalance, 0.001)
+
+      })
+
+      it('should revert if staking < 0.5 ETH, but work if staking more', async () => {
+        await FreeBase.connect(minter).approve(Free20.address, 0)
+        await expectRevert(
+          Free20.connect(minter).stake(0, { value: ethers.utils.parseEther('0.49') }),
+          'You must stake at least 0.5 ether'
+        )
+
+        await Free20.connect(minter).stake(0, { value: ethers.utils.parseEther('0.51') })
+      })
+
+
+
+      it('should revert if claim is attempted after window', async () => {
+        await FreeBase.connect(minter).approve(Free20.address, 0)
+        await Free20.connect(minter).stake(0, stakeValue)
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod + claimWindow + 1)
+
+        expect(await Free20.connect(minter).isExpired(0)).to.equal(true)
+        await expectRevert(
+          Free20.connect(minter).claim(0),
+          'You can only claim within the claim window'
+        )
+
+      })
     })
 
     describe('multiple attempts', () => {
 
-      it('should work if staking more eth on a lost free0', async () => {})
+      it('should work if staking more eth on a lost free0', async () => {
+        const balanceBeforeFirstStake = num(await minter.getBalance())
 
-      it('should revert if not staking at least twice the previous stake', async () => {})
+        await FreeBase.connect(minter).approve(Free20.address, 0)
+        await Free20.connect(minter).stake(0, stakeValue)
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod + claimWindow + 1)
 
-      it('should revert if attempting staking on free0 not originally owned', async () => {})
+        expect(await Free20.connect(minter).isExpired(0)).to.equal(true)
 
-      it('should revert if attempting to stake before previous window has closed', async () => {})
+
+        const stake1 = await Free20.connect(minter).free0ToStakes(0)
+        expect(stake1[3]).to.equal(1)
+
+        await expectRevert(
+          Free20.connect(notMinter).stake(0, stakeValue),
+          'You must be the original staker'
+        )
+
+        await expectRevert(
+          Free20.connect(minter).stake(0, { value: ethers.utils.parseEther('0.49') }),
+          'Double or nothing'
+        )
+
+        const balanceBeforeSecondStake = num(await minter.getBalance())
+
+        await Free20.connect(minter).stake(0, stakeValue)
+
+        const stake2 = await Free20.connect(minter).free0ToStakes(0)
+        expect(stake2[3]).to.equal(2)
+
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod + claimWindow + 1)
+
+        await expectRevert(
+          Free20.connect(minter).stake(0, { value: ethers.utils.parseEther('0.99') }),
+          'Double or nothing'
+        )
+        const balanceBeforeThirdStake = num(await minter.getBalance())
+
+        await Free20.connect(minter).stake(0, { value: ethers.utils.parseEther('1') })
+
+        const stake3 = await Free20.connect(minter).free0ToStakes(0)
+        expect(stake3[3]).to.equal(3)
+
+        const balanceAfterThirdStake = num(await minter.getBalance())
+
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod)
+        await Free20.connect(minter).claim(0)
+
+        const finalBalance = num(await minter.getBalance())
+
+
+        expect(balanceBeforeSecondStake).to.be.closeTo(balanceBeforeFirstStake - 0.5, 0.001)
+        expect(balanceBeforeThirdStake).to.be.closeTo(balanceBeforeFirstStake - 1, 0.001)
+        expect(balanceAfterThirdStake).to.be.closeTo(balanceBeforeFirstStake - 2, 0.001)
+        expect(finalBalance).to.be.closeTo(balanceBeforeFirstStake, 0.001)
+      })
     })
 
     describe('withdraw', () => {
 
-      it('should work if 2000000 blocks after window has closed', async () => {})
+      it('should work if 2000000 blocks after window has closed', async () => {
+        await FreeBase.connect(minter).approve(Free20.address, 0)
+        await Free20.connect(minter).stake(0, stakeValue)
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod)
+        await Free20.connect(minter).claim(0) // token id 4
 
-      it('should revert if < 2000000 blocks have passed since window has closed', async () => {})
+        await FreeBase.connect(notMinter).approve(Free20.address, 1)
+        await Free20.connect(notMinter).stake(1, stakeValue)
 
-      it('should revert if non-original staker attempts withdraw', async () => {})
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod + claimWindow + 1)
+        await Free20.connect(notMinter).stake(1, stakeValue)
+
+        await expectRevert(
+          Free20.connect(minter).withdraw(1, 4),
+          'You must wait at least 2000000 blocks after missed claim'
+        )
+
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod + claimWindow + resignation + 1)
+
+        await Free20.connect(notMinter).stake(1, { value: ethers.utils.parseEther('1') })
+
+        await expectRevert(
+          Free20.connect(minter).withdraw(1, 4),
+          'You must wait at least 2000000 blocks after missed claim'
+        )
+
+        await time.advanceBlockTo(Number(await time.latestBlock()) + stakePeriod + claimWindow + resignation + 1)
+
+        await expectRevert(
+          Free20.connect(minter).withdraw(1, 0),
+          'Invalid Free20'
+        )
+
+        await expectRevert(
+          Free20.connect(notMinter).withdraw(1, 4),
+          'You must be the owner of this Free20'
+        )
+
+        const balanceBeforeWithdraw = num(await minter.getBalance())
+        await Free20.connect(minter).withdraw(1, 4)
+        const balanceAfterWithdraw = num(await minter.getBalance())
+
+        await expectRevert(
+          Free20.connect(minter).withdraw(1, 4),
+          'Nothing to withdraw'
+        )
+
+        await expectRevert(
+          Free20.connect(notMinter).claim(1),
+          'Nothing to claim'
+        )
+
+        expect(balanceAfterWithdraw).to.be.closeTo(balanceBeforeWithdraw + 2, 0.001)
+        expect(await FreeBase.connect(minter).ownerOf(1)).to.equal(minter.address)
+
+        const stake = await Free20.connect(minter).free0ToStakes(0)
+        expect(Number(stake[2])).to.equal(0)
+
+
+      })
     })
   })
 

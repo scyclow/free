@@ -36,5 +36,7 @@ module.exports = {
       accounts: [`0x${STUFF.DEV1}`, `0x${STUFF.DEV2}`, `0x${STUFF.DEV3}`]
     }
   },
-
+  mocha: {
+    timeout: 200000
+  },
 };

@@ -1,7 +1,41 @@
 // SPDX-License-Identifier: CC0
 
 
+/*
+ /$$$$$$$$ /$$$$$$$  /$$$$$$$$ /$$$$$$$$        /$$$$$$   /$$$$$$
+| $$_____/| $$__  $$| $$_____/| $$_____/       /$$__  $$ /$$$_  $$
+| $$      | $$  \ $$| $$      | $$            |__/  \ $$| $$$$\ $$
+| $$$$$   | $$$$$$$/| $$$$$   | $$$$$           /$$$$$$/| $$ $$ $$
+| $$__/   | $$__  $$| $$__/   | $$__/          /$$____/ | $$\ $$$$
+| $$      | $$  \ $$| $$      | $$            | $$      | $$ \ $$$
+| $$      | $$  | $$| $$$$$$$$| $$$$$$$$      | $$$$$$$$|  $$$$$$/
+|__/      |__/  |__/|________/|________/      |________/ \______/
 
+
+
+ /$$
+| $$
+| $$$$$$$  /$$   /$$
+| $$__  $$| $$  | $$
+| $$  \ $$| $$  | $$
+| $$  | $$| $$  | $$
+| $$$$$$$/|  $$$$$$$
+|_______/  \____  $$
+           /$$  | $$
+          |  $$$$$$/
+           \______/
+  /$$$$$$  /$$$$$$$$ /$$$$$$$$ /$$    /$$ /$$$$$$ /$$$$$$$$ /$$$$$$$
+ /$$__  $$|__  $$__/| $$_____/| $$   | $$|_  $$_/| $$_____/| $$__  $$
+| $$  \__/   | $$   | $$      | $$   | $$  | $$  | $$      | $$  \ $$
+|  $$$$$$    | $$   | $$$$$   |  $$ / $$/  | $$  | $$$$$   | $$$$$$$/
+ \____  $$   | $$   | $$__/    \  $$ $$/   | $$  | $$__/   | $$____/
+ /$$  \ $$   | $$   | $$        \  $$$/    | $$  | $$      | $$
+|  $$$$$$/   | $$   | $$$$$$$$   \  $/    /$$$$$$| $$$$$$$$| $$
+ \______/    |__/   |________/    \_/    |______/|________/|__/
+
+
+CC0 2022
+*/
 
 
 pragma solidity ^0.8.17;
@@ -16,15 +50,6 @@ interface IFree {
 }
 
 
-
-/*
-  collector must stake a free0 token along with 0.5 eth
-  they can unstake the token + their eth after 200000 blocks with a window of 1000 blocks
-  if they miss their claim, they can double or nothing the amount of $ staked
-
-  if they do not double or nothing after 2000000 blocks, anyone with a free20 token can withdraw the token and the eth
-*/
-
 contract Free20 {
   IFree public immutable free;
 
@@ -36,18 +61,30 @@ contract Free20 {
     address staker;
   }
 
-  mapping(uint256 => Stake) public free0ToStakes;
+  mapping(uint256 => Stake) private _free0ToStakes;
   mapping(uint256 => bool) public free0TokenIdUsed;
 
-  uint256 public immutable stakePeriod = 200000;
-  uint256 public immutable claimWindow = 1000;
+  uint256 public constant claimWindow = 2000;
+  uint256 public constant stakePeriod = 200000;
+  uint256 public constant resignation = 2000000;
 
-  constructor(address freeAddr, uint256 _progressPeriodExpiration) {
+  constructor(address freeAddr) {
     free = IFree(freeAddr);
   }
 
+  function free0ToStakes(uint256 free0TokenId) external view returns (uint256, uint256, uint256, uint256, address) {
+    Stake memory stake = _free0ToStakes[free0TokenId];
+    return (
+      stake.blockNumber,
+      stake.claimBlockNumber,
+      stake.totalStaked,
+      stake.attempt,
+      stake.staker
+    );
+  }
+
   function isStaking(uint256 free0TokenId) public view returns (bool) {
-    Stake memory stake = free0ToStakes[free0TokenId];
+    Stake memory stake = _free0ToStakes[free0TokenId];
     return (
       stake.blockNumber > 0
       && block.number >= stake.blockNumber
@@ -56,12 +93,12 @@ contract Free20 {
   }
 
   function isExpired(uint256 free0TokenId) public view returns (bool) {
-    Stake memory stake = free0ToStakes[free0TokenId];
+    Stake memory stake = _free0ToStakes[free0TokenId];
     return stake.blockNumber > 0 && block.number > stake.blockNumber + stakePeriod + claimWindow;
   }
 
   function stake(uint256 free0TokenId) public payable {
-    Stake storage stake = free0ToStakes[free0TokenId];
+    Stake storage stake = _free0ToStakes[free0TokenId];
     require(!isStaking(free0TokenId), 'This token is already being staked');
     require(free.tokenIdToCollectionId(free0TokenId) == 0, 'Invalid Free0');
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free20');
@@ -69,7 +106,7 @@ contract Free20 {
 
     if (isExpired(free0TokenId)) {
       require(stake.staker == msg.sender, 'You must be the original staker');
-      require(msg.value >= stake.totalStaked, 'Double of nothing');
+      require(msg.value >= stake.totalStaked, 'Double or nothing');
     } else {
       require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
       require(msg.value >= 0.5 ether, 'You must stake at least 0.5 ether');
@@ -77,29 +114,34 @@ contract Free20 {
     }
 
     stake.blockNumber = block.number;
-    stake.staker = msg.sender;
     stake.totalStaked += msg.value;
     stake.attempt += 1;
+    stake.staker = msg.sender;
   }
 
   function withdraw(uint256 stakedFree0TokenId, uint256 free20TokenId) public {
-    Stake memory stake = free0ToStakes[stakedFree0TokenId];
-    require(stake.blockNumber > 0 && block.number > stake.blockNumber + stakePeriod + claimWindow + 2000000);
+    Stake storage stake = _free0ToStakes[stakedFree0TokenId];
+    require(
+      stake.blockNumber > 0 && block.number > stake.blockNumber + stakePeriod + claimWindow + resignation,
+      'You must wait at least 2000000 blocks after missed claim'
+    );
+    require(stake.totalStaked > 0, 'Nothing to withdraw');
 
-    //// this is all fucke dup
-    // require(free.tokenIdToCollectionId(free20TokenId) == 20, 'Invalid Free20');
-    // require(free.ownerOf(free20TokenId) == msg.sender, 'You must be the owner of this Free20');
+    require(free.tokenIdToCollectionId(free20TokenId) == 20, 'Invalid Free20');
+    require(free.ownerOf(free20TokenId) == msg.sender, 'You must be the owner of this Free20');
 
     free.transferFrom(address(this), msg.sender, stakedFree0TokenId);
-    payable(msg.sender).transfer(stake.totalStaked);
+    uint256 stakeAmount = stake.totalStaked;
     stake.totalStaked = 0;
+    payable(msg.sender).transfer(stakeAmount);
   }
 
 
   function claim(uint256 free0TokenId) public {
-    Stake memory stake = free0ToStakes[free0TokenId];
+    Stake storage stake = _free0ToStakes[free0TokenId];
     require(stake.staker == msg.sender, 'You must be the original staker');
     require(stake.claimBlockNumber == 0, 'You have already claimed');
+    require(stake.totalStaked > 0, 'Nothing to claim');
 
     require(
       block.number > stake.blockNumber + stakePeriod
@@ -114,8 +156,8 @@ contract Free20 {
     free.mint(20, msg.sender);
     free.transferFrom(address(this), msg.sender, free0TokenId);
 
-    payable(msg.sender).transfer(stake.totalStaked);
+    uint256 stakeAmount = stake.totalStaked;
     stake.totalStaked = 0;
+    payable(msg.sender).transfer(stakeAmount);
   }
 }
-

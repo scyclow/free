@@ -26,3 +26,20 @@ contract MockFree {
     free.mint(freeNumber, msg.sender);
   }
 }
+
+contract LowercaseMockFree {
+  IFree public immutable free;
+
+  uint public freeNumber;
+  mapping(uint256 => bool) public free0tokenIdUsed;
+
+  constructor(address freeAddr, uint256 _freeNumber) {
+    free = IFree(freeAddr);
+    freeNumber = _freeNumber;
+  }
+
+  function claim(uint free0TokenId) public {
+    free0tokenIdUsed[free0TokenId] = true;
+    free.mint(freeNumber, msg.sender);
+  }
+}
