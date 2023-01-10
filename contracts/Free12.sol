@@ -70,7 +70,7 @@ contract Free12 {
     free.mint(12, msg.sender);
   }
 
-  function addrIs0x123456789(address x) internal returns (bool) {
+  function addrIs0x123456789(address x) internal pure returns (bool) {
     for(uint i = 0; i < 5; i++) {
       bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
       uint8 hi = uint8(b) / 16;

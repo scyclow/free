@@ -48,12 +48,10 @@ interface IFree {
   function appendAttributeToToken(uint256 tokenId, string memory attrKey, string memory attrValue) external;
 }
 
-
 interface IArtBlocks {
   function tokensOfOwner(address owner) external view returns (uint256[] memory);
   function tokenIdToProjectId(uint256 tokenId) external returns (uint256 projectId);
 }
-
 
 
 contract Free8 {
@@ -72,7 +70,7 @@ contract Free8 {
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free8');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
-    // // enumerate over everything in the AB contract to make sure none of them are Maps
+    // enumerate over all AB tokens to make sure none of them are Maps
     uint256[] memory tokensOfOwner = artBlocks.tokensOfOwner(msg.sender);
 
     for (uint256 i; i < tokensOfOwner.length; i++) {
