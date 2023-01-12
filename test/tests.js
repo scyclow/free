@@ -1189,6 +1189,16 @@ describe.only('Free Series 2', () => {
       )
     })
 
+    it('should revert when free 0 == supporting free 0', async () => {
+      await setupAllFrees()
+      await FreeBase.connect(notMinter)[safeTransferFrom](notMinter.address, minter.address, 1)
+
+      await expectRevert(
+        Free7.connect(minter).claim(0, 0),
+        'Free0 cannot support itself'
+      )
+    })
+
     it('should revert when signer has Free0 with all previous Frees, but not a supporting Free0 with all previous Frees', async () => {
       await setupAllFrees()
 

@@ -87,6 +87,7 @@ contract Free7 {
     require(!free0TokenIdUsed[free0TokenId], 'This Free0 has already been used to mint a Free7');
     require(free.ownerOf(free0TokenId) == msg.sender, 'You must be the owner of this Free0');
 
+    require(free0TokenId != supportingFree0TokenId, 'Free0 cannot support itself');
     require((
       free1.free0TokenIdUsed(free0TokenId)
       && free2.free0TokenIdUsed(free0TokenId)
