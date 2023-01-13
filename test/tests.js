@@ -1441,6 +1441,16 @@ describe.only('Free Series 2', () => {
       await Free11.connect(notMinter).claim(1, 387000019, 387000020, 387000021, 387000044)
     })
 
+    it('should revert if pointers are not different', async () => {
+      await Free11.connect(pointerWhale1).point(387000071, minter.address)
+      await Free11.connect(pointerWhale1).point(387000080, minter.address)
+
+      await expectRevert(
+        Free11.connect(minter).claim(0, 387000071, 387000080, 387000071, 387000080),
+        'All Pointers must be different'
+      )
+    })
+
     it('should revert if less than 4 pointers are pointing to a minter', async () => {
       await Free11.connect(pointerWhale1).point(387000071, minter.address)
       await Free11.connect(pointerWhale1).point(387000080, minter.address)

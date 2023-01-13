@@ -93,6 +93,16 @@ contract Free11 {
       'This target does not have enough Pointers'
     );
 
+    require(
+      topPointerTokenId != bottomPointerTokenId &&
+      topPointerTokenId != leftPointerTokenId &&
+      topPointerTokenId != rightPointerTokenId &&
+      bottomPointerTokenId != leftPointerTokenId &&
+      bottomPointerTokenId != rightPointerTokenId &&
+      leftPointerTokenId != rightPointerTokenId,
+      'All Pointers must be different'
+    );
+
     pointerCount[topPointerTokenId] += 1;
     pointerCount[bottomPointerTokenId] += 1;
     pointerCount[leftPointerTokenId] += 1;
