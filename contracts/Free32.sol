@@ -24,7 +24,10 @@ import "./FreeChecker.sol";
 
 contract Free32 is FreeChecker {
   /*
-
+    TODO
+      required % is less if OFFON is off
+      required % is less if 29 threshold is lower
+      etc.
 
 
   */

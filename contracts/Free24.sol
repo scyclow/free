@@ -23,32 +23,22 @@ import "./FreeChecker.sol";
 
 
 contract Free24 is FreeChecker {
-  /*
-  uint256 public deployTime
+  uint256 public deployTime;
 
   constructor() {
-    deployTime = block.timestamp
+    deployTime = block.timestamp;
   }
 
   function mintDay(uint256 timestamp) public view returns (bool) {
-    uint256 timeDiffDays = (timestamp - deployTime) / 1 days
-    return timeDiffDays % 350 == 0
-
+    uint256 timeDiffDays = (timestamp - deployTime) / 24 hours;
+    return timeDiffDays % 365 == 0;
   }
 
-
-  */
 
   function claim(uint256 free0TokenId) external {
     preCheck(free0TokenId, '24');
 
-    /*
-
-    require(mintDay(block.timestamp))
-
-    */
-
-
+    require(mintDay(block.timestamp), 'Outside of mint window');
 
     postCheck(free0TokenId, 24, '24');
   }

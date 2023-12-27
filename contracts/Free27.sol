@@ -22,26 +22,29 @@ pragma solidity ^0.8.23;
 import "./FreeChecker.sol";
 
 
+interface Fiefdoms {
+  function tokenIdToFiefdom(uint256) external view returns (address);
+}
+
+interface FiefdomsVassal {
+  function ownerOf(uint256) external view returns (address);
+}
+
+
 contract Free27 is FreeChecker {
-  /*
-  mapping(uint256 => bool) public vassalIdUsed
 
+  Fiefdoms public fiefdoms = Fiefdoms(0x9304D9116Bb83ccedCc33ac4918Adb9b1E104230);
+  mapping(uint256 => bool) public vassalIdUsed;
 
-  */
 
   function claim(uint256 free0TokenId, uint256 fiefdomVassalId) external {
     preCheck(free0TokenId, '27');
 
-    /*
-    Fiefdom f = Fiefdom(fiefdoms.tokenIdToFiefdom)
-    require(f.ownerOf(0) == msg.sender)
-    require(!vassalidUsed[fiefdomVassalId])
+    FiefdomsVassal vassal = FiefdomsVassal(fiefdoms.tokenIdToFiefdom(fiefdomVassalId));
 
-    vassalIdUsed[fiefdomVassalId] = true
-
-
-    */
-
+    require(vassal.ownerOf(0) == msg.sender, 'You do not lord over this vassal');
+    require(!vassalIdUsed[fiefdomVassalId], 'Token already used');
+    vassalIdUsed[fiefdomVassalId] = true;
 
 
     postCheck(free0TokenId, 27, '27');

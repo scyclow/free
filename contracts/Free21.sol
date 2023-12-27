@@ -112,7 +112,8 @@ contract Free21 is FreeChecker {
       revealedSecretNumber_b % 2 == 1
     )
 
-    // transfer both frees to msg.sender
+    // 50% chance it transfers A to sender
+    // 50% chance it transfers B to sender
 
     _clearVars_a()
     _clearVars_b()

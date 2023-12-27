@@ -2293,7 +2293,7 @@ describe.only('Free Series 3', () => {
   const altFree0 = 4377
 
   let signers, steviep, steveip, banker, minter, notMinter, _start
-  let FreeSeries3Deployer, FreeBase, Free21, Free22
+  let FreeSeries3Deployer, FreeBase, Free21, Free22, Free23, Free24, Free25, Free26, Free27, Free28, Free29, Free30, Free31, Free32, Free33
 
   beforeEach(async () => {
     _start = await snapshot()
@@ -2358,11 +2358,27 @@ describe.only('Free Series 3', () => {
     await FreeSeries3Deployer.connect(steviep).deploy()
 
     const Free21Factory = await ethers.getContractFactory('Free21', steviep)
-    const Free22Factory = await ethers.getContractFactory('Free22', steviep)
-    const Free23Factory = await ethers.getContractFactory('Free23', steviep)
     Free21 = await Free21Factory.attach(await FreeBase.collectionIdToMinter(21))
+
+    const Free22Factory = await ethers.getContractFactory('Free22', steviep)
     Free22 = await Free22Factory.attach(await FreeBase.collectionIdToMinter(22))
+
+    const Free23Factory = await ethers.getContractFactory('Free23', steviep)
     Free23 = await Free23Factory.attach(await FreeBase.collectionIdToMinter(23))
+
+    const Free24Factory = await ethers.getContractFactory('Free24', steviep)
+    Free24 = await Free24Factory.attach(await FreeBase.collectionIdToMinter(24))
+
+    const Free25Factory = await ethers.getContractFactory('Free25', steviep)
+    Free25 = await Free25Factory.attach(await FreeBase.collectionIdToMinter(25))
+
+    const Free26Factory = await ethers.getContractFactory('Free26', steviep)
+    Free26 = await Free26Factory.attach(await FreeBase.collectionIdToMinter(26))
+
+    const Free27Factory = await ethers.getContractFactory('Free27', steviep)
+    Free27 = await Free27Factory.attach(await FreeBase.collectionIdToMinter(27))
+
+
   }
 
 
@@ -2484,10 +2500,7 @@ describe.only('Free Series 3', () => {
     let start, DancingMan, raptornews, momo, ficken, egli
 
     beforeEach(async () => {
-      start = await snapshot()
       await deployFrees()
-
-
 
       raptornews = await ethers.getImpersonatedSigner('0x764aBE778aa96Cd04972444a8E1DB83dF13f7E66')
       momo = await ethers.getImpersonatedSigner('0x9197f339ccA98b2Bc14e98235ec1a59cb2090d77')
@@ -2505,7 +2518,7 @@ describe.only('Free Series 3', () => {
 
     })
 
-    afterEach(() => start.restore())
+
 
 
     it('should work', async () => {
@@ -2578,22 +2591,207 @@ describe.only('Free Series 3', () => {
       expect(await DancingMan.connect(steviep).balanceOf(steviep.address, 1)).to.equal(2)
       expect(await DancingMan.connect(steviep).balanceOf(Free23.address, 1)).to.equal(1)
     })
-
-
-  //   // it shouldn't mint if msg.sender doesn't own ree22TokenId isn't free22
-  //   // it shouldn't let 22 be used twice
   })
 
-  // describe('Free24', () => {
-  //   // it should only mint 24 on mint day (error before and after)
-  // })
+  describe('Free24', () => {
+    beforeEach(async () => {
+      await deployFrees()
+    })
 
-  // describe('Free25', () => {
-  //   // setMinter should error if not cash owner
-  //   // setMinter should error if cash not redeemed
-  //   // claim shoud error if cashToken != miner address
-  //   // claim should mint 25
-  // })
+    it('should only allow minting within the 24 hour period', async () => {
+      await time.increase(time.duration.hours(23.5))
+
+      await expectMintToBeCorrect(
+        () => Free24.connect(steviep).claim(0),
+        0,
+        24
+      )
+
+      await time.increase(time.duration.hours(1))
+
+      await expectRevert(
+        Free24.connect(steviep).claim(altFree0),
+        'Outside of mint window'
+      )
+      await time.increase(time.duration.days(363))
+
+      await expectRevert(
+        Free24.connect(steviep).claim(altFree0),
+        'Outside of mint window'
+      )
+
+      await time.increase(time.duration.days(1))
+
+      await expectMintToBeCorrect(
+        () => Free24.connect(steviep).claim(altFree0),
+        0,
+        24
+      )
+
+    })
+  })
+
+  describe('Free25', () => {
+    let start, ColdHardCash, mymilkshakebringsalltheboystotheyard, georgeP
+
+    beforeEach(async () => {
+      await deployFrees()
+
+      mymilkshakebringsalltheboystotheyard = await ethers.getImpersonatedSigner('0xFB6223EA050A0956cdf294129a00F66b5AE4f5a5')
+      georgeP = await ethers.getImpersonatedSigner('0xbc3Ced9089e13C29eD15e47FFE3e0cAA477cb069')
+
+      await banker.sendTransaction({ to: georgeP.address, value: toETH('5.0') })
+      await banker.sendTransaction({ to: mymilkshakebringsalltheboystotheyard.address, value: toETH('5.0') })
+
+
+
+      ColdHardCash = await ethers.getContractAt(
+        [
+          'function ownerOf(uint256 tokenId) external returns (address owner)',
+        ],
+        '0x6DEa3f6f1bf5ce6606054BaabF5452726Fe4dEA1'
+      )
+
+    })
+
+    it('should only allow redeemed CASH holders to set a minter address', async () => {
+      await expectRevert(
+        Free25.connect(georgeP).setMinter(0, georgeP.address),
+        'Not owner of CASH token'
+      )
+      await expectRevert(
+        Free25.connect(georgeP).setMinter(6, georgeP.address),
+        'CASH token not redeemed'
+      )
+      await Free25.connect(mymilkshakebringsalltheboystotheyard).setMinter(0, georgeP.address)
+    })
+
+    it('should allow ALed addresses to mint', async () => {
+
+      await expectRevert(
+        Free25.connect(georgeP).claim(383 ,0),
+        'Address cannot mint'
+      )
+      await Free25.connect(mymilkshakebringsalltheboystotheyard).setMinter(0, georgeP.address)
+
+
+
+      await expectMintToBeCorrect(
+        () => Free25.connect(georgeP).claim(383 ,0),
+        383,
+        25
+      )
+
+    })
+  })
+
+  describe('Free26', () => {
+
+    let OFFON, ficken, georgeP
+    beforeEach(async () => {
+      await deployFrees()
+      OFFON = await ethers.getContractAt(
+        [
+          'function latestHash() external view returns (uint256)',
+          'function lastTurnedOn() external view returns (uint256)',
+          'function turnOff() external',
+          'function turnOn() external',
+        ],
+        '0xA860D381A193A0811C77c8FCD881B3E9F245A419'
+      )
+
+      ficken = await ethers.getImpersonatedSigner('0xE6C66da8e190989c7582a61b584aF091c1e5E6C1')
+      georgeP = await ethers.getImpersonatedSigner('0xbc3Ced9089e13C29eD15e47FFE3e0cAA477cb069')
+
+      await banker.sendTransaction({ to: ficken.address, value: toETH('5.0') })
+      await banker.sendTransaction({ to: georgeP.address, value: toETH('5.0') })
+
+
+    })
+
+    it('should only mint aftet OFFON has been turned off and on again', async () => {
+      await expectMintToBeCorrect(
+        () => Free26.connect(steviep).claim(0),
+        0,
+        26
+      )
+
+      await expectRevert(
+        Free26.connect(georgeP).claim(383),
+        'Have you tried turning it off?'
+      )
+
+      await OFFON.connect(ficken).turnOff()
+
+      await expectRevert(
+        Free26.connect(georgeP).claim(383),
+        'Have you tried turning it on?'
+      )
+
+      await OFFON.connect(ficken).turnOn()
+
+      await expectMintToBeCorrect(
+        () => Free26.connect(georgeP).claim(383),
+        383,
+        26
+      )
+
+      await expectRevert(
+        Free26.connect(steviep).claim(altFree0),
+        'Have you tried turning it off?'
+      )
+    })
+
+  })
+
+
+  describe.only('Free27', () => {
+
+    let Fiefdoms, steviep_dev
+    beforeEach(async () => {
+      await deployFrees()
+      // Fiefdoms = await ethers.getContractAt(
+      //   [
+      //     'function latestHash() external view returns (uint256)',
+      //     'function lastTurnedOn() external view returns (uint256)',
+      //     'function turnOff() external',
+      //     'function turnOn() external',
+      //   ],
+      //   '0xA860D381A193A0811C77c8FCD881B3E9F245A419'
+      // )
+
+      FiefdomVassal0 = await ethers.getContractAt(
+        [
+          'function activate(string name_, string symbol_, string license_, uint256 maxSupply_, address tokenURIContract_, address erc721Hooks_)',
+          'function setMinter(address) external',
+          'function mint(address, uint256) external',
+        ],
+        '0xf94001aBe7F7Efa3215cED2C0487273Cd8494b4f'
+      )
+
+    })
+
+    it('should only allow fiefdom 0 token holders to mint', async () => {
+      await FiefdomVassal0.connect(steviep).activate('', '', '', 100, zeroAddr, zeroAddr)
+
+      await expectRevert(
+        Free27.connect(steviep).claim(0, 1),
+        'You do not lord over this vassal'
+      )
+
+      await expectMintToBeCorrect(
+        () => Free27.connect(steviep).claim(0, 0),
+        0,
+        27
+      )
+
+      await expectRevert(
+        Free27.connect(steviep).claim(altFree0, 0),
+        'Token already used'
+      )
+    })
+
+  })
 
   // describe('Free29', () => {
   //   // it should only mint 29 TO THE RIGHT ADDRESS, should return free0
