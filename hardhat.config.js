@@ -11,6 +11,7 @@ const STUFF = require('../DEV_KEYS/stuff.json')
 module.exports = {
   solidity: {
     compilers: [
+      {version: "0.8.23"},
       {version: "0.8.17"},
       {version: "0.8.11"},
       {version: "0.8.0"},
@@ -20,7 +21,7 @@ module.exports = {
     hardhat: {
       forking: {
         url: `https://mainnet.infura.io/v3/${STUFF.INFURA_KEY}`,
-        blockNumber: 16335208,
+        blockNumber: 18815078,
       },
     },
     mumbai: {
