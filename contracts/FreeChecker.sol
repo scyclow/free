@@ -14,7 +14,7 @@ interface IFree {
   function ownerOf(uint256 tokenId) external returns (address owner);
   function tokenIdToCollectionId(uint256 tokenId) external returns (uint256 collectionId);
   function appendAttributeToToken(uint256 tokenId, string memory attrKey, string memory attrValue) external;
-  function transferFrom(address from, address to, uint256 tokenId) external;
+  function safeTransferFrom(address from, address to, uint256 tokenId) external;
 }
 
 abstract contract FreeChecker {

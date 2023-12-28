@@ -2293,7 +2293,7 @@ describe.only('Free Series 3', () => {
   const altFree0 = 4377
 
   let signers, steviep, steveip, banker, minter, notMinter, _start
-  let FreeSeries3Deployer, FreeBase, Free21, Free22, Free23, Free24, Free25, Free26, Free27, Free28, Free29, Free30, Free31, Free32, Free33
+  let FreeSeries3CollectionCreator, FreeBase, Free21, Free22, Free23, Free24, Free25, Free26, Free27, Free28, Free29, Free30, Free31, Free32, Free33
 
   beforeEach(async () => {
     _start = await snapshot()
@@ -2313,10 +2313,10 @@ describe.only('Free Series 3', () => {
     await banker.sendTransaction({ to: steveip.address, value: toETH('5.0') })
     await FreeBase.connect(steveip)[safeTransferFrom](steveip.address, steviep.address, altFree0)
 
-    const FreeSeries3DeployerFactory = await ethers.getContractFactory('FreeSeries3Deployer', steviep)
+    const FreeSeries3CollectionCreatorFactory = await ethers.getContractFactory('FreeSeries3CollectionCreator', steviep)
 
-    FreeSeries3Deployer = await FreeSeries3DeployerFactory.deploy()
-    await FreeSeries3Deployer.deployed()
+    FreeSeries3CollectionCreator = await FreeSeries3CollectionCreatorFactory.deploy()
+    await FreeSeries3CollectionCreator.deployed()
   })
 
   afterEach(() => _start.restore())
@@ -2354,59 +2354,96 @@ describe.only('Free Series 3', () => {
   }
 
   async function deployFrees() {
-    await FreeBase.connect(steviep).transferOwnership(FreeSeries3Deployer.address)
-    await FreeSeries3Deployer.connect(steviep).deploy()
 
     const Free21Factory = await ethers.getContractFactory('Free21', steviep)
-    Free21 = await Free21Factory.attach(await FreeBase.collectionIdToMinter(21))
+    Free21 = await Free21Factory.deploy()
+    await  Free21.deployed()
 
     const Free22Factory = await ethers.getContractFactory('Free22', steviep)
-    Free22 = await Free22Factory.attach(await FreeBase.collectionIdToMinter(22))
+    Free22 = await Free22Factory.deploy()
+    await  Free22.deployed()
 
     const Free23Factory = await ethers.getContractFactory('Free23', steviep)
-    Free23 = await Free23Factory.attach(await FreeBase.collectionIdToMinter(23))
+    Free23 = await Free23Factory.deploy()
+    await  Free23.deployed()
 
     const Free24Factory = await ethers.getContractFactory('Free24', steviep)
-    Free24 = await Free24Factory.attach(await FreeBase.collectionIdToMinter(24))
+    Free24 = await Free24Factory.deploy()
+    await  Free24.deployed()
 
     const Free25Factory = await ethers.getContractFactory('Free25', steviep)
-    Free25 = await Free25Factory.attach(await FreeBase.collectionIdToMinter(25))
+    Free25 = await Free25Factory.deploy()
+    await Free25.deployed()
 
     const Free26Factory = await ethers.getContractFactory('Free26', steviep)
-    Free26 = await Free26Factory.attach(await FreeBase.collectionIdToMinter(26))
+    Free26 = await Free26Factory.deploy()
+    await Free26.deployed()
 
     const Free27Factory = await ethers.getContractFactory('Free27', steviep)
-    Free27 = await Free27Factory.attach(await FreeBase.collectionIdToMinter(27))
+    Free27 = await Free27Factory.deploy()
+    await Free27.deployed()
 
+    const Free28Factory = await ethers.getContractFactory('Free28', steviep)
+    Free28 = await Free28Factory.deploy()
+    await Free28.deployed()
 
+    const Free29Factory = await ethers.getContractFactory('Free29', steviep)
+    Free29 = await Free29Factory.deploy()
+    await Free29.deployed()
+
+    await FreeBase.connect(steviep).transferOwnership(FreeSeries3CollectionCreator.address)
+    await FreeSeries3CollectionCreator.connect(steviep).register([
+      Free21.address,
+      Free22.address,
+      Free23.address,
+      Free24.address,
+      Free25.address,
+      Free26.address,
+      Free27.address,
+      Free28.address,
+      Free29.address,
+    ])
   }
 
 
-  describe('FreeSeries3Deployer', () => {
+  describe('FreeSeries3CollectionCreator', () => {
     it('should deploy', async () => {
+      await deployFrees()
+
       await expectRevert(
-        FreeBase.connect(notMinter).transferOwnership(FreeSeries3Deployer.address),
+        FreeBase.connect(notMinter).transferOwnership(FreeSeries3CollectionCreator.address),
         'Ownable: caller is not the owner'
       )
 
-      await FreeBase.connect(steviep).transferOwnership(FreeSeries3Deployer.address)
-      expect(await FreeBase.connect(steviep).owner()).to.equal(FreeSeries3Deployer.address)
+      await FreeBase.connect(steviep).transferOwnership(FreeSeries3CollectionCreator.address)
+      expect(await FreeBase.connect(steviep).owner()).to.equal(FreeSeries3CollectionCreator.address)
 
       await expectRevert.unspecified(
-        FreeSeries3Deployer.connect(notMinter).reclaimFreeOwnership()
+        FreeSeries3CollectionCreator.connect(notMinter).reclaimFreeOwnership()
       )
 
 
-      expect(await FreeBase.connect(steviep).owner()).to.equal(FreeSeries3Deployer.address)
-      await FreeSeries3Deployer.connect(steviep).reclaimFreeOwnership()
+      expect(await FreeBase.connect(steviep).owner()).to.equal(FreeSeries3CollectionCreator.address)
+      await FreeSeries3CollectionCreator.connect(steviep).reclaimFreeOwnership()
 
       expect(await FreeBase.connect(steviep).owner()).to.equal(steviep.address)
-      await FreeBase.connect(steviep).transferOwnership(FreeSeries3Deployer.address)
-      await FreeSeries3Deployer.connect(steviep).deploy()
+      await FreeBase.connect(steviep).transferOwnership(FreeSeries3CollectionCreator.address)
+
+      await FreeSeries3CollectionCreator.connect(steviep).register([
+        Free21.address,
+        Free22.address,
+        Free23.address,
+        Free24.address,
+        Free25.address,
+        Free26.address,
+        Free27.address,
+        Free28.address,
+        Free29.address,
+      ])
 
       const expectedIPFS = '...................................'
 
-      for (let collectionId = 21; collectionId < 23; collectionId++) {
+      for (let collectionId = 21; collectionId < 30; collectionId++) {
         const metadata = await FreeBase.connect(steviep).collectionIdToMetadata(collectionId)
         expect(metadata.namePrefix).to.equal(`Free${collectionId} #`)
         expect(metadata.externalUrl).to.equal(`https://steviep.xyz/free`)
@@ -2561,7 +2598,6 @@ describe.only('Free Series 3', () => {
     })
 
     it('should error if sent a different 1155', async () => {
-
       RPAA = await ethers.getContractAt(
         [
           'function safeTransferFrom(address, address, uint256, uint256, bytes) external',
@@ -2745,21 +2781,10 @@ describe.only('Free Series 3', () => {
   })
 
 
-  describe.only('Free27', () => {
-
-    let Fiefdoms, steviep_dev
+  describe('Free27', () => {
+    let FiefdomVassal0
     beforeEach(async () => {
       await deployFrees()
-      // Fiefdoms = await ethers.getContractAt(
-      //   [
-      //     'function latestHash() external view returns (uint256)',
-      //     'function lastTurnedOn() external view returns (uint256)',
-      //     'function turnOff() external',
-      //     'function turnOn() external',
-      //   ],
-      //   '0xA860D381A193A0811C77c8FCD881B3E9F245A419'
-      // )
-
       FiefdomVassal0 = await ethers.getContractAt(
         [
           'function activate(string name_, string symbol_, string license_, uint256 maxSupply_, address tokenURIContract_, address erc721Hooks_)',
@@ -2790,18 +2815,303 @@ describe.only('Free Series 3', () => {
         'Token already used'
       )
     })
-
   })
 
-  // describe('Free29', () => {
-  //   // it should only mint 29 TO THE RIGHT ADDRESS, should return free0
-  //   // it should not allow you to mint form a free0 if you're not the original owner
-  //   // it should return the free0 if original sender is contract
-  //   // it should not allow mint if claimed in same block as stake
-  //   // it should roughly follow the probability schedule (0 always works, 8 always holds)
-  //   // it should require 2900000 blocks to retry on held free0
-  //   // run this like 500 times and log results
-  // })
+
+  describe('Free28', () => {
+
+    let MMO, noohp
+    beforeEach(async () => {
+      await deployFrees()
+      MMO = await ethers.getContractAt(
+        [
+          'function ownerOf(uint256) external view returns (address)',
+          'function safeTransferFrom(address from, address to, uint256 tokenId)',
+
+        ],
+        '0x41d3d86a84c8507A7Bc14F2491ec4d188FA944E7'
+      )
+
+      noohp = await ethers.getImpersonatedSigner('0x65f7b79FF49b3E3774E0A556c13525F906778FB7')
+
+      await MMO.connect(noohp).safeTransferFrom(noohp.address, steviep.address, 1)
+
+    })
+
+    it('should only allow fiefdom 0 token holders to mint', async () => {
+
+
+      const yayVotes = [0, 2, 3, 4, 5, 6, 11, 99, 100, 1459]
+      const yayVotesUnordered = [0, 0, 3, 4, 5, 6, 11, 99, 100, 1459]
+      const nayVotes = [0, 1, 3, 4, 5, 6, 11, 99, 100, 1459]
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 1, 0, 0, 0, yayVotes),
+        'Must own Prop15 token'
+      )
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 0, 2, 0, 0, yayVotes),
+        'Must own MMO token'
+      )
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 0, 0, 2, 0, yayVotes),
+        'Must own MMO token'
+      )
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 0, 0, 0, 2, yayVotes),
+        'Must own MMO token'
+      )
+
+
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 0, 0, 1459, 1459, yayVotes),
+        'MMO has already been thrown overboard'
+      )
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 0, 0, 0, 1459, nayVotes),
+        'Not yay vote'
+      )
+
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 0, 1, 0, 1459, yayVotes),
+        'Did not vote for Prop15'
+      )
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 0, 0, 0, 1459, yayVotesUnordered),
+        'Yays unordered'
+      )
+
+      await expectRevert(
+        Free28.connect(steviep).claim(0, 0, 0, 0, 0, yayVotes),
+        'No settlement address proposed'
+      )
+
+      await expectMintToBeCorrect(
+        () => Free28.connect(steviep).claim(
+          0,
+          0,
+          0,
+          0,
+          1459,
+          yayVotes
+        ),
+        0,
+        28
+      )
+    })
+  })
+
+  describe.only('Free29', () => {
+    let start, MMO, Free0
+    beforeEach(async () => {
+      start = await snapshot()
+
+
+      await deployFrees()
+      MMO = await ethers.getContractAt(
+        ['function safeTransferFrom(address, address, uint256)'],
+        '0x41d3d86a84c8507A7Bc14F2491ec4d188FA944E7'
+      )
+
+      Free0 = await ethers.getContractAt(
+        [
+          'function claim() external',
+        ],
+        '0x5E965A4B2b53AaeCFaB51368f064c98531947A26'
+      )
+    })
+
+    afterEach(() => start.restore())
+
+    it('should send the free0 to the contract', async () => {
+      await expectRevert(
+        MMO.connect(steviep).safeTransferFrom(steviep.address, Free29.address, 0),
+        'Not a Free token'
+      )
+
+      await expectRevert(
+        FreeBase.connect(steviep)[safeTransferFrom](steviep.address, Free29.address, 1),
+        'Invalid Free0'
+      )
+
+
+      const blockNumber = await ethers.provider.getBlockNumber()
+      await FreeBase.connect(steviep)[safeTransferFrom](steviep.address, Free29.address, 0)
+      expect(await Free29.connect(steviep).free0TokenIdToOwner(0)).to.equal(steviep.address)
+      expect(await FreeBase.connect(steviep).ownerOf(0)).to.equal(Free29.address)
+    })
+
+    it('should work', async () => {
+      await FreeBase.connect(steviep)[safeTransferFrom](steviep.address, Free29.address, 0)
+      await expectRevert(
+        Free29.connect(notMinter).claim(0),
+        'Not original owner'
+      )
+
+      expect(await Free29.connect(steviep).mints()).to.equal(0)
+      await Free29.connect(steviep).claim(0)
+
+      expect(await FreeBase.connect(steviep).ownerOf(0)).to.equal(steviep.address)
+      expect(await Free29.connect(steviep).mints()).to.equal(1)
+
+      await expect0MetadataToBeCorrect(0, 29)
+
+      expect(bnToN(
+        await FreeBase.connect(steviep).tokenIdToCollectionId(
+          await FreeBase.connect(steviep).totalSupply() - 1
+        )
+      )).to.equal(29)
+
+      expect(
+        await FreeBase.connect(steviep).ownerOf(
+          await FreeBase.connect(steviep).totalSupply() - 1
+        )
+      ).to.equal(steviep.address)
+    })
+
+    it('should use the correct probability', async () => {
+      expect(await Free29.connect(steviep).currentThreshold(0)).to.equal(0)
+      expect(await Free29.connect(steviep).currentThreshold(1)).to.equal(1)
+      expect(await Free29.connect(steviep).currentThreshold(2)).to.equal(2)
+      expect(await Free29.connect(steviep).currentThreshold(3)).to.equal(3)
+      expect(await Free29.connect(steviep).currentThreshold(4)).to.equal(4)
+      expect(await Free29.connect(steviep).currentThreshold(5)).to.equal(5)
+      expect(await Free29.connect(steviep).currentThreshold(6)).to.equal(6)
+      expect(await Free29.connect(steviep).currentThreshold(7)).to.equal(7)
+      expect(await Free29.connect(steviep).currentThreshold(8)).to.equal(8)
+      expect(await Free29.connect(steviep).currentThreshold(9)).to.equal(7)
+      expect(await Free29.connect(steviep).currentThreshold(10)).to.equal(6)
+      expect(await Free29.connect(steviep).currentThreshold(11)).to.equal(5)
+      expect(await Free29.connect(steviep).currentThreshold(12)).to.equal(4)
+      expect(await Free29.connect(steviep).currentThreshold(13)).to.equal(3)
+      expect(await Free29.connect(steviep).currentThreshold(14)).to.equal(2)
+      expect(await Free29.connect(steviep).currentThreshold(15)).to.equal(1)
+      expect(await Free29.connect(steviep).currentThreshold(16)).to.equal(0)
+      expect(await Free29.connect(steviep).currentThreshold(17)).to.equal(1)
+      expect(await Free29.connect(steviep).currentThreshold(18)).to.equal(2)
+      // etc...
+    })
+
+    it.skip('should hold onto my token at mint 8', async () => {
+
+      for (let i = 0; i < 25; i++) {
+        const tokenId = await FreeBase.connect(steviep).totalSupply()
+        await Free0.connect(steviep).claim()
+        await FreeBase.connect(steviep)[safeTransferFrom](steviep.address, Free29.address, tokenId)
+        await Free29.connect(steviep).claim(tokenId)
+      }
+
+      const blockNumber = await ethers.provider.getBlockNumber()
+
+      await FreeBase.connect(steviep)[safeTransferFrom](steviep.address, Free29.address, 0)
+
+      await expectRevert(
+        Free29.connect(steviep).withdraw(0),
+        'Must wait 2900000 blocks'
+      )
+
+      await expectRevert(
+        Free29.connect(notMinter).withdraw(0),
+        'Not original owner'
+      )
+
+      await Free29.connect(steviep).claim(0)
+      expect(await FreeBase.connect(steviep).ownerOf(0)).to.equal(Free29.address)
+
+      await expectRevert(
+        Free29.connect(steviep).withdraw(0),
+        'Must wait 2900000 blocks'
+      )
+
+      const stakedBlock = bnToN(await Free29.connect(steviep).free0TokenIdToStakedBlock(0))
+      await time.advanceBlockTo(stakedBlock + 28998)
+
+      await expectRevert(
+        Free29.connect(steviep).withdraw(0),
+        'Must wait 2900000 blocks'
+      )
+
+      expect(await FreeBase.connect(steviep).ownerOf(0)).to.equal(Free29.address)
+
+      await time.advanceBlock()
+
+      await Free29.connect(steviep).withdraw(0)
+
+      expect(await FreeBase.connect(steviep).ownerOf(0)).to.equal(steviep.address)
+    })
+
+
+    it.skip('should give me some breakdowns', async () => {
+      const mapping = {
+        0: 0,
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+        6: 0,
+        7: 0,
+        8: 0,
+        9: 0,
+        10: 0,
+        11: 0,
+        12: 0,
+        13: 0,
+        14: 0,
+        15: 0,
+      }
+      for (let i = 0; i < 1200; i++) {
+        const tokenId = await FreeBase.connect(steviep).totalSupply()
+        const mints = await Free29.connect(steviep).mints()
+        await Free0.connect(steviep).claim()
+        await FreeBase.connect(steviep)[safeTransferFrom](steviep.address, Free29.address, tokenId)
+        await Free29.connect(steviep).claim(tokenId)
+        if (i%50 === 0) console.log(i)
+        const owner = await FreeBase.connect(steviep).ownerOf(tokenId)
+        if (owner == Free29.address) {
+          mapping[mints % 16]++
+        }
+      }
+
+      console.log(mapping)
+
+    })
+
+/*
+{
+  '0': 0,
+  '1': 18,
+  '2': 37,
+  '3': 61,
+  '4': 94,
+  '5': 133,
+  '6': 162,
+  '7': 174,
+  '8': 200,
+  '9': 180,
+  '10': 159,
+  '11': 148,
+  '12': 100,
+  '13': 77,
+  '14': 35,
+  '15': 36
+}
+
+
+*/
+
+
+    // it should roughly follow the probability schedule (0 always works, 8 always holds)
+    // it should require 2900000 blocks to retry on held free0
+    // run this like 500 times and log results
+  })
 
 
   // describe('Free30', () => {
