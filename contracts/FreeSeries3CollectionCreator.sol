@@ -49,6 +49,8 @@ contract FreeSeries3CollectionCreator {
     free.createCollection(freeAddrs[6], 'Free27 #', url, string(abi.encodePacked(imrUrl, '27')), extension, "Free Palestine");
     free.createCollection(freeAddrs[7], 'Free28 #', url, string(abi.encodePacked(imrUrl, '28')), extension, "Free trade");
     free.createCollection(freeAddrs[8], 'Free29 #', url, string(abi.encodePacked(imrUrl, '29')), extension, "Free for the taking");
+    free.createCollection(freeAddrs[9], 'Free30 #', url, string(abi.encodePacked(imrUrl, '30')), extension, "Freewheeling");
+    free.createCollection(freeAddrs[10], 'Free31 #', url, string(abi.encodePacked(imrUrl, '31')), extension, "Free and easy");
 
     reclaimFreeOwnership();
     require(free.owner() == steviep);
