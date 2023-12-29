@@ -48,11 +48,12 @@ contract FreeSeries3CollectionCreator {
     free.createCollection(freeAddrs[4], 'Free25 #', url, string(abi.encodePacked(imrUrl, '25')), extension, "Free Tibet");
     free.createCollection(freeAddrs[5], 'Free26 #', url, string(abi.encodePacked(imrUrl, '26')), extension, "Free Taiwan");
     free.createCollection(freeAddrs[6], 'Free27 #', url, string(abi.encodePacked(imrUrl, '27')), extension, "Free Palestine");
-    free.createCollection(freeAddrs[7], 'Free28 #', url, string(abi.encodePacked(imrUrl, '28')), extension, "Free trade");
-    free.createCollection(freeAddrs[8], 'Free29 #', url, string(abi.encodePacked(imrUrl, '29')), extension, "Free for the taking");
+    free.createCollection(freeAddrs[7], 'Free28 #', url, string(abi.encodePacked(imrUrl, '28')), extension, "Free for the taking");
+    free.createCollection(freeAddrs[8], 'Free29 #', url, string(abi.encodePacked(imrUrl, '29')), extension, "Free trade");
     free.createCollection(freeAddrs[9], 'Free30 #', url, string(abi.encodePacked(imrUrl, '30')), extension, "Freewheeling");
     free.createCollection(freeAddrs[10], 'Free31 #', url, string(abi.encodePacked(imrUrl, '31')), extension, "Free and easy");
     free.createCollection(freeAddrs[11], 'Free32 #', url, string(abi.encodePacked(imrUrl, '32')), extension, "Free parking");
+    free.createCollection(freeAddrs[12], 'Free33 #', url, string(abi.encodePacked(imrUrl, '33')), extension, "Free throw");
 
     reclaimFreeOwnership();
     require(free.owner() == steviep);

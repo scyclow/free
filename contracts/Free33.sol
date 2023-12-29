@@ -42,10 +42,18 @@ pragma solidity ^0.8.23;
 
 
 import "./FreeChecker.sol";
+import "hardhat/console.sol";
+
+interface GrailsV {
+  function ownerOf(uint256 tokenId) external returns (address owner);
+}
 
 
 contract Free33 is FreeChecker {
   mapping(uint256 => bool) public THREE_BALLS;
+  GrailsV public grailsV = GrailsV(0x92A50Fe6eDE411BD26e171B97472e24D245349B8);
+  mapping(uint256 => uint256) public ballX;
+  mapping(uint256 => uint256) public ballY;
 
   constructor() {
     THREE_BALLS[12] = true;
@@ -85,53 +93,83 @@ contract Free33 is FreeChecker {
     THREE_BALLS[101] = true;
     THREE_BALLS[102] = true;
   }
-  /*
 
-  mapping(uint256 => uint256) public ballX
-  mapping(uint256 => uint256) public ballY
-  mapping(uint256 => bool) public ballThrown
+
 
 
   function throwBall(uint256 grailsVTokenId) external {
-    require(grailsV.ownerOf(grailsVTokenId) == msg.sender)
-    require(THREE_BALLS[grailsVTokenId])
+    require(grailsV.ownerOf(grailsVTokenId) == msg.sender, 'Only owner can throw');
+    require(THREE_BALLS[grailsVTokenId], 'Can only throw a ball');
 
-    ballX[grailsVTokenId] = block.difficulty % 6;
-    ballY[grailsVTokenId] = (block.difficulty / 100) % 6;
-    ballThrown[grailsVTokenId] = true
+    uint256 hash = uint256(keccak256(abi.encodePacked(
+      block.prevrandao, block.gaslimit, grailsVTokenId
+    )));
 
+    ballX[grailsVTokenId] = 1 + hash % 6;
+    ballY[grailsVTokenId] = 1 + (hash / 100000) % 6;
   }
 
 
+  function ballCoords(uint256 tokenId) external view returns (uint256, uint256) {
+    return (ballX[tokenId], ballY[tokenId]);
+  }
 
   function isLine(
-    uint256 ball_a,
-    uint256 ball_b,
-    uint256 ball_c
-  ) external view returns (bool) {
-    int8 a_b_YDiff = int8(ballY[ball_b]) - int(ballY[ball_a])
-    int8 a_c_YDiff = int8(int(ballY[ball_c] - ballY[ball_c]))
-
-    if (a_b_YDiff == 0 && a_c_YDiff == 0) return true
-    if (
-      a_b_YDiff == 0 && a_c_YDiff != 0 ||
-      a_b_YDiff != 0 && a_c_YDiff == 0
-    ) return false
-
-    int8 a_b_XDiff = int8(ballX[ball_b]) - int(ballX[ball_a])
-    int8 a_c_XDiff = int8(int(ballX[ball_c] - ballX[ball_a]))
-
-    int8 a_b_ratio = (a_b_XDiff * 60) / a_b_YDiff
-    int8 a_c_ratio = (a_c_XDiff * 60) / a_c_YDiff
-
-    return (
-      a_b_ratio == a_c_ratio
-      || a_b_ratio == a_c_ratio * -1
-    )
-
+    int[2] memory ball_a,
+    int[2] memory ball_b,
+    int[2] memory ball_c
+  ) public view returns (bool) {
+    return _isLine(ball_a, ball_b, ball_c) && _isLine(ball_b, ball_c, ball_a);
   }
 
-  */
+  function isOutOfBounds(int[2] memory ball) external view returns (bool) {
+    return _outOfBounds(ball[0]) || _outOfBounds(ball[1]);
+  }
+
+  function _outOfBounds(int n) internal view returns (bool) {
+    return 1 > n || n > 6;
+  }
+
+  function _isLine(
+    int[2] memory ball_a,
+    int[2] memory ball_b,
+    int[2] memory ball_c
+  ) internal view returns (bool) {
+    int ax = ball_a[0];
+    int ay = ball_a[1];
+
+    int bx = ball_b[0];
+    int by = ball_b[1];
+
+    int cx = ball_c[0];
+    int cy = ball_c[1];
+
+    if (
+      _outOfBounds(ax) ||
+      _outOfBounds(ay) ||
+      _outOfBounds(bx) ||
+      _outOfBounds(by) ||
+      _outOfBounds(cx) ||
+      _outOfBounds(cy)
+    ) return false;
+
+
+    int a_b_YDiff = by - ay;
+    int a_c_YDiff = cy - ay;
+
+    int a_b_XDiff = bx - ax;
+    int a_c_XDiff = cx - ax;
+
+    if (a_b_YDiff == 0 && a_c_YDiff == 0) return true;
+    if (a_b_YDiff == 0) return a_b_XDiff == 0;
+    if (a_c_YDiff == 0) return a_c_XDiff == 0;
+
+    return (
+      (a_b_XDiff * 60) / a_b_YDiff
+      ==
+      (a_c_XDiff * 60) / a_c_YDiff
+    );
+  }
 
 
   function claim(
@@ -142,30 +180,26 @@ contract Free33 is FreeChecker {
   ) external {
     preCheck(free0TokenId, '33');
 
-    /*
-
-    require(grailsV.ownerOf(ownedBallTokenId) == msg.sender)
-    require(ballThrown[ownedBallTokenId])
-    require(ballThrown[supportingBallTokenId1])
-    require(ballThrown[supportingBallTokenId2])
-
-
+    require(grailsV.ownerOf(ownedBallTokenId) == msg.sender, 'Not owner of ball');
     require(
       ownedBallTokenId != supportingBallTokenId1 &&
       ownedBallTokenId != supportingBallTokenId2 &&
-      supportingBallTokenId1 != supportingBallTokenId2
-    )
+      supportingBallTokenId1 != supportingBallTokenId2,
+      'Invalid supporting balls'
+    );
 
 
+    require(isLine(
+        [int(ballX[ownedBallTokenId]), int(ballY[ownedBallTokenId])],
+        [int(ballX[supportingBallTokenId1]), int(ballY[supportingBallTokenId1])],
+        [int(ballX[supportingBallTokenId2]), int(ballY[supportingBallTokenId2])]
+      ),
+      'Balls not thrown in a straight line'
+    );
 
-    require(isLine(ownedBallTokenId, supportingBallTokenId1, supportingBallTokenId2))
 
-    ballThrown[ownedBallTokenId] = false
-
-
-    */
-
-
+    ballX[ownedBallTokenId] = 0;
+    ballY[ownedBallTokenId] = 0;
 
     postCheck(free0TokenId, 33, '33');
   }

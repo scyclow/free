@@ -152,6 +152,10 @@ describe.only('Free Series 3', () => {
     Free32 = await Free32Factory.deploy()
     await Free32.deployed()
 
+    const Free33Factory = await ethers.getContractFactory('Free33', steviep)
+    Free33 = await Free33Factory.deploy()
+    await Free33.deployed()
+
 
     FREE_CONTRACT_ADDRS = [
       Free21.address,
@@ -166,6 +170,7 @@ describe.only('Free Series 3', () => {
       Free30.address,
       Free31.address,
       Free32.address,
+      Free33.address,
     ]
 
   }
@@ -1250,6 +1255,181 @@ describe.only('Free Series 3', () => {
         0,
         32
       )
+    })
+  })
+
+  describe.only('Free33', () => {
+    let grailsDeployer, thrower
+    beforeEach(async () => {
+      await deployFrees()
+      GrailsV = await ethers.getContractAt(
+        ['function ownerOf(uint256 tokenId) external view returns (address owner)'],
+        '0x92A50Fe6eDE411BD26e171B97472e24D245349B8'
+      )
+
+      grailsDeployer = await ethers.getImpersonatedSigner('0x686BD755B9396e93Eb924Da11F78f3c92076494E')
+      thrower = await ethers.getImpersonatedSigner('0x6Eaa184BafE79b7E5DCBc432E85947C99b7402C5')
+
+    })
+
+    it('should throw the ball', async () => {
+      await expectRevert(
+        Free33.connect(steviep).throwBall(12),
+        'Only owner can throw'
+      )
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).throwBall(13),
+        'Can only throw a ball'
+      )
+
+      expect(bnToN(await Free33.connect(grailsDeployer).ballX(12))).to.equal(0)
+      expect(bnToN(await Free33.connect(grailsDeployer).ballY(12))).to.equal(0)
+
+      await Free33.connect(grailsDeployer).throwBall(12)
+
+      expect(bnToN(await Free33.connect(grailsDeployer).ballX(12))).to.not.equal(0)
+      expect(bnToN(await Free33.connect(grailsDeployer).ballY(12))).to.not.equal(0)
+
+    })
+
+    it('should know whether its a line or not', async () => {
+      expect(await Free33.connect(grailsDeployer).isLine([1,1], [1,1], [1,1])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([6,6], [6,6], [6,6])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([2,2], [2,2], [3,3])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([2,2], [2,2], [4,3])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([1,1], [2,2], [3,3])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([2,2], [1,1], [6,6])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([2,2], [4,3], [6,4])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([3,4], [3,1], [3,6])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([1,5], [5,5], [4,5])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([2,3], [1,1], [3,5])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([1,3], [1,1], [1,5])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([3,4], [1,5], [5,3])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([3,4], [2,3], [1,2])).to.equal(true)
+      expect(await Free33.connect(grailsDeployer).isLine([1,1], [2,2], [3,4])).to.equal(false)
+      expect(await Free33.connect(grailsDeployer).isLine([1,4], [5,2], [4,3])).to.equal(false)
+      expect(await Free33.connect(grailsDeployer).isLine([6,6], [6,2], [3,3])).to.equal(false)
+      expect(await Free33.connect(grailsDeployer).isLine([3,2], [5,3], [5,1])).to.equal(false)
+      expect(await Free33.connect(grailsDeployer).isLine([1,3], [3,2], [5,5])).to.equal(false)
+      expect(await Free33.connect(grailsDeployer).isLine([3,2], [4,3], [1,4])).to.equal(false)
+      expect(await Free33.connect(grailsDeployer).isLine([0,0], [1,1], [1,1])).to.equal(false)
+      expect(await Free33.connect(grailsDeployer).isLine([7,7], [1,1], [1,1])).to.equal(false)
+    })
+
+    it.only('should claim', async () => {
+      await expectRevert(
+        Free33.connect(steviep).claim(0, 12, 30, 36),
+        'Not owner of ball'
+      )
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 12, 30, 36),
+        'You must be the owner of this Free0'
+      )
+
+      await FreeBase.connect(steviep)[safeTransferFrom](steviep.address, grailsDeployer.address, 0)
+      await FreeBase.connect(steviep)[safeTransferFrom](steviep.address, thrower.address, altFree0)
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 37, 12, 36),
+        'Not owner of ball'
+      )
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 36, 30, 12),
+        'Not owner of ball'
+      )
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 12, 12, 12),
+        'Invalid supporting balls'
+      )
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 12, 12, 30),
+        'Invalid supporting balls'
+      )
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 12, 30, 12),
+        'Invalid supporting balls'
+      )
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 12, 30, 30),
+        'Invalid supporting balls'
+      )
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 12, 30, 36),
+        'Balls not thrown in a straight line'
+      )
+
+      const rethrow = async () => {
+        return Promise.all([
+          Free33.connect(grailsDeployer).throwBall(12),
+          Free33.connect(grailsDeployer).throwBall(30),
+          Free33.connect(thrower).throwBall(36)
+        ])
+      }
+
+      const isLine = async (a, b, c) => Free33.connect(steviep).isLine(
+        [bnToN(await Free33.connect(grailsDeployer).ballX(a)), bnToN(await Free33.connect(grailsDeployer).ballY(a))],
+        [bnToN(await Free33.connect(grailsDeployer).ballX(b)), bnToN(await Free33.connect(grailsDeployer).ballY(b))],
+        [bnToN(await Free33.connect(grailsDeployer).ballX(c)), bnToN(await Free33.connect(grailsDeployer).ballY(c))],
+      )
+
+      await rethrow()
+
+      expect(await isLine(12, 30, 36)).to.equal(false)
+
+      await expectRevert(
+        Free33.connect(grailsDeployer).claim(0, 12, 30, 36),
+        'Balls not thrown in a straight line'
+      )
+
+      await rethrow()
+      await rethrow()
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(12)
+
+
+      expect(await isLine(12, 30, 36)).to.equal(true)
+
+
+      await expectMintToBeCorrect(
+        () => Free33.connect(grailsDeployer).claim(0, 12, 30, 36),
+        0,
+        33
+      )
+      expect(await isLine(12, 30, 36)).to.equal(false)
+
+      await expectRevert(
+        Free33.connect(thrower).claim(altFree0, 36, 30, 12),
+        'Balls not thrown in a straight line'
+      )
+
+      expect(bnToN(await Free33.connect(grailsDeployer).ballX(12))).to.equal(0)
+      expect(bnToN(await Free33.connect(grailsDeployer).ballY(12))).to.equal(0)
+
+      expect(bnToN(await Free33.connect(grailsDeployer).ballX(30))).to.not.equal(0)
+      expect(bnToN(await Free33.connect(grailsDeployer).ballY(30))).to.not.equal(0)
     })
   })
 })
