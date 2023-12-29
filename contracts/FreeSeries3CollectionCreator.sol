@@ -12,6 +12,7 @@ pragma solidity ^0.8.23;
 interface IFreeBase {
   function owner() external view returns (address);
   function transferOwnership(address newOwner) external;
+
   function createCollection(
     address minter,
     string calldata _namePrefix,
@@ -51,6 +52,7 @@ contract FreeSeries3CollectionCreator {
     free.createCollection(freeAddrs[8], 'Free29 #', url, string(abi.encodePacked(imrUrl, '29')), extension, "Free for the taking");
     free.createCollection(freeAddrs[9], 'Free30 #', url, string(abi.encodePacked(imrUrl, '30')), extension, "Freewheeling");
     free.createCollection(freeAddrs[10], 'Free31 #', url, string(abi.encodePacked(imrUrl, '31')), extension, "Free and easy");
+    free.createCollection(freeAddrs[11], 'Free32 #', url, string(abi.encodePacked(imrUrl, '32')), extension, "Free parking");
 
     reclaimFreeOwnership();
     require(free.owner() == steviep);

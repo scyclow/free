@@ -20,7 +20,6 @@ pragma solidity ^0.8.23;
 
 
 import "./FreeChecker.sol";
-import "hardhat/console.sol";
 
 interface Free19 {
   function lastAssigned() external view returns (uint256);

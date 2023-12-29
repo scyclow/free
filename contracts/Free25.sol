@@ -20,7 +20,6 @@ pragma solidity ^0.8.23;
 
 
 import "./FreeChecker.sol";
-import "hardhat/console.sol";
 
 
 interface ColdHardCash {

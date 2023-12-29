@@ -148,6 +148,10 @@ describe.only('Free Series 3', () => {
     Free31 = await Free31Factory.deploy()
     await Free31.deployed()
 
+    const Free32Factory = await ethers.getContractFactory('Free32', steviep)
+    Free32 = await Free32Factory.deploy()
+    await Free32.deployed()
+
 
     FREE_CONTRACT_ADDRS = [
       Free21.address,
@@ -161,6 +165,7 @@ describe.only('Free Series 3', () => {
       Free29.address,
       Free30.address,
       Free31.address,
+      Free32.address,
     ]
 
   }
@@ -212,6 +217,96 @@ describe.only('Free Series 3', () => {
     })
   })
 
+  // this won't work because meuleman and raptornews didn't complete 10, 12, and 16 at the time fo the network snapshot
+  describe.skip('Free21', () => {
+    let MMO, raptornews, meuleman
+    beforeEach(async () => {
+      await deployFrees()
+      MMO = await ethers.getContractAt(
+        ['function safeTransferFrom(address, address, uint256)'],
+        '0x41d3d86a84c8507A7Bc14F2491ec4d188FA944E7'
+      )
+
+      meuleman = await ethers.getImpersonatedSigner('0x07496F8579fd3844E3573D4D2A1Ead50853E1885')
+      raptornews = await ethers.getImpersonatedSigner('0xCA63A0F3AC9bdAf6DD83bf2646bc2C0E9CF974bd')
+
+      await banker.sendTransaction({ to: meuleman.address, value: toETH('5.0') })
+      await banker.sendTransaction({ to: raptornews.address, value: toETH('5.0') })
+
+    })
+
+    it('should send the free0 to the contract', async () => {
+      await expectRevert(
+        MMO.connect(steviep).safeTransferFrom(steviep.address, Free21.address, 0),
+        'Not a Free token'
+      )
+
+
+      await expectRevert(
+        FreeBase.connect(steviep)[safeTransferFrom](steviep.address, Free21.address, 1),
+        'Invalid Free0'
+      )
+
+      await expectRevert(
+        FreeBase.connect(steviep)[safeTransferFrom](steviep.address, Free21.address, 0),
+        'Token not used to complete Frees 8-20'
+      )
+
+
+      await FreeBase.connect(meuleman)[safeTransferFrom](meuleman.address, Free21.address, 558)
+      const blockNumber = await ethers.provider.getBlockNumber()
+
+      expect(await FreeBase.connect(meuleman).ownerOf(558)).to.equal(Free21.address)
+      expect(await Free21.connect(meuleman).free0TokenIdToOwner(558)).to.equal(meuleman.address)
+      expect(await Free21.connect(meuleman).free0TokenStakeBlockNumber(558)).to.equal(blockNumber)
+    })
+
+    it('should say which free0s are valid', async () => {
+      expect(await Free21.connect(steviep).isValidFree0(558)).to.equal(true)
+      expect(await Free21.connect(steviep).isValidFree0(4314)).to.equal(true)
+      expect(await Free21.connect(steviep).isValidFree0(0)).to.equal(false)
+    })
+
+    it('should rescue the staked token', async () => {
+      await FreeBase.connect(meuleman)[safeTransferFrom](meuleman.address, Free21.address, 558)
+
+      await expectRevert(
+        Free21.connect(raptornews).claim(4576, 558),
+        'Invalid Free0'
+      )
+
+      await expectRevert(
+        Free21.connect(steviep).claim(0, 558),
+        'Token not used to complete Frees 8-20'
+      )
+
+
+      await expectRevert.unspecified(
+        Free21.connect(raptornews).claim(4314, 0),
+      )
+
+      const originalTotalSupply = bnToN(await FreeBase.connect(steviep).totalSupply())
+
+      await Free21.connect(raptornews).claim(4314, 558)
+
+
+      expect(await FreeBase.connect(meuleman).ownerOf(558)).to.equal(meuleman.address)
+
+      expect(await FreeBase.connect(steviep).totalSupply()).to.equal(originalTotalSupply + 2)
+
+      await expectPreCheckCalled(() => Free21.connect(raptornews).claim(4314, 558), 21)
+      await expectPreCheckCalled(() => Free21.connect(meuleman).claim(558, 4314), 21)
+      await expectPostCheckCalled(4314, 21)
+      await expectPostCheckCalled(558, 21)
+
+      const newMetadata1 = parseMetadata(await FreeBase.connect(steviep).tokenURI(originalTotalSupply))
+      const newMetadata2 = parseMetadata(await FreeBase.connect(steviep).tokenURI(originalTotalSupply+1))
+
+      expect(newMetadata1.attributes).to.deep.include({ trait_type: `Collection`, value: `21` })
+      expect(newMetadata2.attributes).to.deep.include({ trait_type: `Collection`, value: `21` })
+
+    })
+  })
 
   describe('Free22', () => {
     let start, ABContract, DMFCVaultContract
@@ -535,9 +630,7 @@ describe.only('Free Series 3', () => {
         'Have you tried turning it off?'
       )
     })
-
   })
-
 
   describe('Free27', () => {
     let FiefdomVassal0
@@ -574,7 +667,6 @@ describe.only('Free Series 3', () => {
       )
     })
   })
-
 
   describe('Free28', () => {
 
@@ -879,9 +971,7 @@ describe.only('Free Series 3', () => {
     beforeEach(async () => {
       await deployFrees()
       Free19 = await ethers.getContractAt(
-        [
-          'function assign(address) external',
-        ],
+        ['function assign(address) external'],
         '0xaBCeF3a4aDC27A6c962b4fC17181F47E62244EF0'
       )
 
@@ -1025,8 +1115,7 @@ describe.only('Free Series 3', () => {
     })
   })
 
-
-  describe.only('Free31', () => {
+  describe('Free31', () => {
 
     beforeEach(async () => {
       await deployFrees()
@@ -1105,7 +1194,64 @@ describe.only('Free Series 3', () => {
     })
   })
 
+  describe('Free32', () => {
+    let OFFON, Free19, Free0, ficken
+    beforeEach(async () => {
+      await deployFrees()
+      OFFON = await ethers.getContractAt(
+        [
+          'function latestHash() external view returns (uint256)',
+          'function lastTurnedOn() external view returns (uint256)',
+          'function turnOff() external',
+          'function turnOn() external',
+        ],
+        '0xA860D381A193A0811C77c8FCD881B3E9F245A419'
+      )
 
+      Free19 = await ethers.getContractAt(
+        ['function assign(address) external'],
+        '0xaBCeF3a4aDC27A6c962b4fC17181F47E62244EF0'
+      )
+
+      Free0 = await ethers.getContractAt(
+        ['function claim() external'],
+        '0x5E965A4B2b53AaeCFaB51368f064c98531947A26'
+      )
+
+      ficken = await ethers.getImpersonatedSigner('0xE6C66da8e190989c7582a61b584aF091c1e5E6C1')
+
+    })
+
+    it('should work', async () => {
+      const freeBpsRequired = bnToN(await Free32.connect(steviep).percentBpsRequired())
+      const freesRequired = bnToN(await Free32.connect(steviep).freesRequired())
+      const freeTotalSupply = bnToN(await FreeBase.connect(steviep).totalSupply())
+      const steviepFrees = bnToN(await FreeBase.connect(steviep).balanceOf(steviep.address))
+
+      expect(freeBpsRequired).to.equal(201)
+      expect(freesRequired).to.equal(Math.floor(freeTotalSupply * freeBpsRequired / 10000))
+
+      await OFFON.connect(ficken).turnOff()
+
+      expect(bnToN(await Free32.connect(steviep).percentBpsRequired())).to.equal(151)
+
+      await Free19.connect(ficken).assign(Free32.address)
+
+      expect(bnToN(await Free32.connect(steviep).percentBpsRequired())).to.equal(126)
+
+      expect(bnToN(await Free32.connect(steviep).freesRequired())).to.equal(59)
+
+      for (let i = 0; i < 44; i++) {
+        await Free0.connect(steviep).claim()
+      }
+
+      await expectMintToBeCorrect(
+        () => Free32.connect(steviep).claim(0),
+        0,
+        32
+      )
+    })
+  })
 })
 
 

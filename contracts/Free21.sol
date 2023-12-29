@@ -22,199 +22,75 @@ pragma solidity ^0.8.23;
 import "./FreeChecker.sol";
 
 
-
+interface FreeClaimer {
+  function free0TokenIdUsed(uint256) external view returns (bool);
+}
 
 contract Free21 is FreeChecker {
+  mapping(uint256 => address) public free0TokenIdToOwner;
+  mapping(uint256 => uint256) public free0TokenStakeBlockNumber;
 
-  /*
+  function isContract(address account) internal view returns (bool) {
+    uint256 size;
+    assembly {
+      size := extcodesize(account)
+    }
+    return size > 0;
+  }
+
+  function isValidFree0(uint256 tokenId) public view returns (bool) {
+    return
+      FreeClaimer(free.collectionIdToMinter(8)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(9)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(10)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(11)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(12)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(13)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(14)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(15)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(16)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(17)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(18)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(19)).free0TokenIdUsed(tokenId) &&
+      FreeClaimer(free.collectionIdToMinter(20)).free0TokenIdUsed(tokenId)
+    ;
+  }
+
+  function onERC721Received(
+    address,
+    address from,
+    uint256 tokenId,
+    bytes calldata
+  ) external returns (bytes4) {
+    require(msg.sender == address(free), 'Not a Free token');
+    require(free.tokenIdToCollectionId(tokenId) == 0, 'Invalid Free0');
+    require(!free0TokenIdUsed[tokenId], 'This Free0 has already been used to mint a Free21');
+
+    require(!isContract(from), 'Cannot be owned by a contract');
+    require(isValidFree0(tokenId), 'Token not used to complete Frees 8-20');
+
+    free0TokenIdToOwner[tokenId] = from;
+    free0TokenStakeBlockNumber[tokenId] = block.number;
+
+    return this.onERC721Received.selector;
+  }
 
 
-  address originalOwner_a
-  uint256 tokenId_a
-  uint256 revealedTimestamp_a
-  uint256 stakedTimestamp_a
-  uint256 revealedSecretNumber_a
-  bytes hashedSecretNumber_a
-
-  address originalOwner_b
-  uint256 tokenId_b
-  uint256 revealedTimestamp_b
-  uint256 stakedTimestamp_b
-  uint256 revealedSecretNumber_b
-  bytes hashedSecretNumber_b
-
-
-
-  function stake_a(uint256 free0TokenId, bytes hashedNumber) external {
+  function claim(uint256 free0TokenId, uint256 tokenToRescue) external {
     preCheck(free0TokenId, '21');
-    require(originalOwner_a == address(0))
+    require(isValidFree0(free0TokenId), 'Token not used to complete Frees 8-20');
 
-    // check that token was used for 8-20
-    // transfer free0TokenId to this contract
 
-    tokenId_a = freeTokenId;
-    hashedSecretNumber_a = hashedNumber;
-    originalOwner_a = msg.sender
+    require(free0TokenStakeBlockNumber[tokenToRescue] < block.number, 'Must wait at least one block to rescue');
+    require(!isContract(msg.sender), 'Cannot be owned by a contract');
+
+    free.safeTransferFrom(address(this), free0TokenIdToOwner[tokenToRescue], tokenToRescue);
+
+
+
+    postCheck(tokenToRescue, 21, '21');
+    postCheck(free0TokenId, 21, '21');
   }
-
-  function stake_b(uint256 free0TokenId, bytes hashedNumber) external {
-    preCheck(free0TokenId, '21');
-    require(originalOwner_b == address(0))
-
-    // check that token was used for 8-20
-    // transfer free0TokenId to this contract
-
-    tokenId_b = freeTokenId;
-    hashedSecretNumber_b = hashedNumber;
-    originalOwner_b = msg.sender
-  }
-
-
-  function withdraw_a() external {
-    require(originalOwner_a == msg.sender)
-    require(revealedTimestamp_b == 0)
-
-    // return free0
-
-    _clearVars_a()
-  }
-
-  function withdraw_b() external {
-    require(originalOwner_b == msg.sender)
-    require(revealedTimestamp_a == 0)
-
-    // return free0
-
-    _clearVars_b()
-  }
-
-
-  function reveal_a(uint256 revealedNumber) external {
-    require(keccak256(revealedNumber) == hashedSecretNumber_a)
-    revealedSecretNumber_a = revealedNumber
-    revealedTimestamp_a = block.timestamp;
-  }
-
-  function reveal_b(uint256 revealedNumber) external {
-    require(keccak256(revealedNumber) == hashedSecretNumber_b)
-    revealedSecretNumber_b = revealedNumber
-    revealedTimestamp_b = block.timestamp;
-  }
-
-  function unclog(uint256 free0TokenId) {
-    // require msg.sender owns this token
-    // check that token was used for 8-20
-
-    require(
-      revealedTimestamp_a > 0 &&
-      revealedTimestamp_b > 0 &&
-      revealedSecretNumber_a % 2 == 1 &&
-      revealedSecretNumber_b % 2 == 1
-    )
-
-    // 50% chance it transfers A to sender
-    // 50% chance it transfers B to sender
-
-    _clearVars_a()
-    _clearVars_b()
-  }
-
-
-
-  fucntion _clearVars_a() internal {
-    originalOwner_a = address(0)
-    tokenId_a = 0
-    revealedTimestamp_a = 0
-    stakedTimestamp_a = 0
-    revealedSecretNumber_a = 0
-    hashedSecretNumber_a = bytes(0)
-  }
-
-
-  fucntion _clearVars_b() internal {
-    originalOwner_b = address(0)
-    tokenId_b = 0
-    revealedTimestamp_b = 0
-    stakedTimestamp_b = 0
-    revealedSecretNumber_b = 0
-    hashedSecretNumber_b = bytes(0)
-  }
-
-
-
-
-  function claim() external {
-
-    // if either  original address is a contract, return tokens and don't mint free0
-
-
-    if (revealedTimestamp_a == 0 && revealedTimestamp_b == 0) {
-      if (
-        block.timestamp - stakedTimestamp_a > 7 days &&
-        block.timestamp - stakedTimestamp_b > 7 days
-      ) {
-        // return 0s
-        _clearVars_a()
-        _clearVars_b()
-        return;
-      } else {
-        throw error
-      }
-    }
-
-    if (revealedTimestamp_a > 0 && revealedTimestamp_b == 0) {
-      if (block.timestamp - revealedTimestamp_a > 7 days) {
-        // A gets both free0 tokens
-        postCheck(free0TokenId_a, 21, '21');
-        _clearVars_a()
-        _clearVars_b()
-        return;
-      } else {
-        error
-      }
-    }
-
-
-    if (revealedTimestamp_b > 0 && revealedTimestamp_a == 0) {
-      if (block.timestamp - revealedTimestamp_b > 7 days) {
-        // B gets both free0 tokens
-        postCheck(free0TokenId_b, 21, '21');
-        _clearVars_a()
-        _clearVars_b()
-        return;
-      } else {
-        error
-      }
-    }
-
-    const aDefects = revealedSecretNumber_a % 2 == 1
-    const bDefects = revealedSecretNumber_b % 2 == 1
-
-    if (aDefects && !bDefects) {
-      // A gets both free0 tokens
-      postCheck(free0TokenId_a, 21, '21');
-
-    } else if (bDefects && !aDefects) {
-      // B gets both free0 tokens
-      postCheck(free0TokenId_b, 21, '21');
-
-    } else if (aDefects && bDefects) {
-      // something bad happens to both frees
-
-      return;
-
-    } else {
-      // return frees
-      postCheck(free0TokenId_a, 21, '21');
-      postCheck(free0TokenId_b, 21, '21');
-    }
-    _clearVars_a()
-    _clearVars_b()
-  }
-
-
-
-  */
 
 
 }
