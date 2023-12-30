@@ -209,7 +209,7 @@ describe.only('Free Series 3', () => {
 
       await FreeSeries3CollectionCreator.connect(steviep).register(FREE_CONTRACT_ADDRS)
 
-      const expectedIPFS = '...................................'
+      const expectedIPFS = 'QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu'
 
       for (let collectionId = 21; collectionId < 30; collectionId++) {
         const metadata = await FreeBase.connect(steviep).collectionIdToMetadata(collectionId)
@@ -490,6 +490,7 @@ describe.only('Free Series 3', () => {
   describe('Free24', () => {
     beforeEach(async () => {
       await deployFrees()
+      await time.increaseTo(1704171600)
     })
 
     it('should only allow minting within the 24 hour period', async () => {
@@ -1440,7 +1441,7 @@ describe.only('Free Series 3', () => {
     })
   })
 
-  describe.only('ThreeBallsGrid', () => {
+  describe('ThreeBallsGrid', () => {
     let GrailsV, Free19, grailsDeployer, thrower
     beforeEach(async () => {
       await deployFrees()
@@ -1472,6 +1473,11 @@ describe.only('Free Series 3', () => {
       ThreeBallsGridURI = await ThreeBallsGridURIFactory.attach(
         await ThreeBallsGrid.connect(steviep).tokenURIContract()
       )
+
+      const ThreeBallsGridURIWrapperFactory = await ethers.getContractFactory('ThreeBallsGridURIWrapper', steviep)
+      ThreeBallsGridURIWrapper = await ThreeBallsGridURIWrapperFactory.deploy(ThreeBallsGridURI.address)
+      await ThreeBallsGridURIWrapper.deployed()
+
     })
 
 
@@ -1497,7 +1503,7 @@ describe.only('Free Series 3', () => {
       )
     })
 
-    it('should mint correctly', async () => {
+    it.only('should mint correctly', async () => {
       await expectRevert(
         ThreeBallsGridMinter.connect(steviep).mint(),
         'Must be Free19 contract claimer'
@@ -1534,6 +1540,35 @@ describe.only('Free Series 3', () => {
         'Must be Free19 contract claimer'
       )
 
+      await Free33.connect(grailsDeployer).throwBall(12)
+      await Free33.connect(grailsDeployer).throwBall(30)
+      await Free33.connect(thrower).throwBall(36)
+
+      await ThreeBallsGrid.connect(steviep).setBalls(0, 12, 30, 36)
+      // await ThreeBallsGrid.connect(steviep).setLightMode(0, true)
+
+      const rethrow = async () => {
+        return Promise.all([
+          Free33.connect(grailsDeployer).throwBall(12),
+          Free33.connect(grailsDeployer).throwBall(30),
+          Free33.connect(thrower).throwBall(36)
+        ])
+      }
+
+      await rethrow()
+      await rethrow()
+      await rethrow()
+
+
+
+      expect(await ThreeBallsGrid.connect(steviep).exists(0)).to.equal(true)
+      console.log('<><><><><>')
+      const metadata = await ThreeBallsGrid.connect(steviep).tokenURI(0)
+      console.log(
+        JSON.parse(metadata.replace('data:application/json;utf8,', ''))
+      )
+
+
     })
 
     it('should only allow 333 mints', async () => {
@@ -1551,7 +1586,20 @@ describe.only('Free Series 3', () => {
       )
 
     })
-    // it should only allow 333 mints
+
+    it.skip('should update metadata', async () => {
+      const parseMetadata = m => JSON.parse(m.replace('data:application/json;utf8,', ''))
+      const originalMetadata = parseMetadata(await ThreeBallsGrid.connect(steviep).tokenURI(0))
+      await ThreeBallsGrid.connect(steviep).setURIContract(ThreeBallsGridURIWrapper.address)
+      const newMetadata = parseMetadata(await ThreeBallsGrid.connect(steviep).tokenURI(0))
+
+
+
+      expect({
+        ...originalMetadata,
+        name: 'Three Balls Grid #0'
+      }).to.deep.equal(newMetadata)
+    })
   })
 })
 

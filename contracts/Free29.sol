@@ -80,7 +80,7 @@ contract Free29 is FreeChecker {
   }
 
 
-  function currentThreshold(uint256 m) public view returns (uint256) {
+  function currentThreshold(uint256 m) public pure returns (uint256) {
     return (
       m % 16 < 8
         ? m % 16

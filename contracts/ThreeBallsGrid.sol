@@ -2,8 +2,29 @@
 
 
 /*
+████████ ██   ██ ██████  ███████ ███████
+   ██    ██   ██ ██   ██ ██      ██
+   ██    ███████ ██████  █████   █████
+   ██    ██   ██ ██   ██ ██      ██
+   ██    ██   ██ ██   ██ ███████ ███████
 
-CC0 2023
+
+██████   █████  ██      ██      ███████
+██   ██ ██   ██ ██      ██      ██
+██████  ███████ ██      ██      ███████
+██   ██ ██   ██ ██      ██           ██
+██████  ██   ██ ███████ ███████ ███████
+
+
+ ██████  ██████  ██ ██████
+██       ██   ██ ██ ██   ██
+██   ███ ██████  ██ ██   ██
+██    ██ ██   ██ ██ ██   ██
+ ██████  ██   ██ ██ ██████
+
+
+
+CC0 2023 - steviep.eth
 */
 
 
@@ -13,7 +34,6 @@ import "./ThreeBallsGridURI.sol";
 
 
 pragma solidity ^0.8.23;
-
 
 contract ThreeBallsGrid is ERC721, Ownable {
   uint256 public maxSupply = 333;
@@ -31,6 +51,7 @@ contract ThreeBallsGrid is ERC721, Ownable {
   }
 
   mapping(uint256 => Balls) public tokenIdToBalls;
+  mapping(uint256 => bool) public isLight;
 
   event MetadataUpdate(uint256 _tokenId);
   event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId);
@@ -87,6 +108,12 @@ contract ThreeBallsGrid is ERC721, Ownable {
     tokenIdToBalls[tokenId].b = b;
     tokenIdToBalls[tokenId].c = c;
 
+    emit MetadataUpdate(tokenId);
+  }
+
+  function setLightMode(uint256 tokenId, bool _isLight) external {
+    require(ownerOf(tokenId) == msg.sender, 'Must own token');
+    isLight[tokenId] = _isLight;
     emit MetadataUpdate(tokenId);
   }
 }

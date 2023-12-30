@@ -15,17 +15,20 @@ import "./ThreeBallsGridURI.sol";
 
 
 contract Free33Mock {
-  function ballCoords(uint256 tokenId) external view returns (uint256, uint256) {
+  function THREE_BALLS(uint256) external pure returns (bool) {
+    return true;
+  }
+  function ballCoords(uint256 tokenId) external pure returns (uint256, uint256) {
     if (tokenId == 12) {
-      return (6, 3);
+      return (2,2);
     } else if (tokenId == 30) {
       return (1,1);
     } else if (tokenId == 36) {
       return (5,5);
     }
   }
-  function isLine(uint256, uint256, uint256) external view returns (bool) {
-    return false;
+  function isLine(uint256, uint256, uint256) external pure returns (bool) {
+    return true;
   }
 }
 
@@ -53,6 +56,11 @@ contract ThreeBallsGridMock {
     tokenIdToBalls[0].a = 12;
     tokenIdToBalls[0].b = 30;
     tokenIdToBalls[0].c = 36;
+  }
+
+
+  function isLight(uint256) external pure returns (bool) {
+    return false;
   }
 
 

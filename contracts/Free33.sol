@@ -119,15 +119,15 @@ contract Free33 is FreeChecker {
     int[2] memory ball_a,
     int[2] memory ball_b,
     int[2] memory ball_c
-  ) public view returns (bool) {
+  ) public pure returns (bool) {
     return _isLine(ball_a, ball_b, ball_c) && _isLine(ball_b, ball_c, ball_a);
   }
 
-  function isOutOfBounds(int[2] memory ball) external view returns (bool) {
+  function isOutOfBounds(int[2] memory ball) external pure returns (bool) {
     return _outOfBounds(ball[0]) || _outOfBounds(ball[1]);
   }
 
-  function _outOfBounds(int n) internal view returns (bool) {
+  function _outOfBounds(int n) internal pure returns (bool) {
     return 1 > n || n > 6;
   }
 
@@ -135,7 +135,7 @@ contract Free33 is FreeChecker {
     int[2] memory ball_a,
     int[2] memory ball_b,
     int[2] memory ball_c
-  ) internal view returns (bool) {
+  ) internal pure returns (bool) {
     int ax = ball_a[0];
     int ay = ball_a[1];
 

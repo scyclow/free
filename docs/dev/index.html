@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title></title>
+</head>
+<body>
+
+  <connect-wallet>
+    <div slot="noWeb3">
+      <em class="error">Please Connect in a <br>Web3-enabled Browser</em>
+    </div>
+
+    <div slot="notConnected">
+      <connect-button>
+        <button id="connectButton" slot="button">Connect</button>
+        <div slot="loading">Loading...</div>
+      </connect-button>
+    </div>
+
+    <div slot="connected" id="connected">
+      connected
+
+
+    </div>
+
+    <div slot="connectionError" class="error">
+
+    </div>
+  </connect-wallet>
+
+</body>
+
+<script src="./utils.js"></script>
+<script src="./connectWallet.js" type="module"></script>
+
+<script type="module">
+  import {provider} from '../eth.js'
+
+
+
+  provider.onConnect(async addr => {
+    const networkName = (await provider.getNetwork()).name
+    // const FREE33_ADDR = '0x26C43C199d24C61612Af7703f1271A73aC36Fe76'
+    // const FREE33_ABI = ['function threeBallsGrid() external view returns (address)']
+    // const Free33 = await provider.contract(FREE33_ADDR, FREE33_ABI)
+
+
+    // const THREE_BALLS_ADDR = await Free33.threeBallsGrid()
+    // const THREE_BALLS_ABI = [
+    //   'function setURIContract(address) external',
+    //   'function tokenURIContract() external view returns (address)',
+    // ]
+
+    // const ThreeBallsGrid = await provider.contract(THREE_BALLS_ADDR, THREE_BALLS_ABI)
+    // console.log(await ThreeBallsGrid.tokenURIContract())
+
+    // await ThreeBallsGrid.setURIContract('0xe000B280Fd9691AA571B27b6324840F4652b8bcd')
+    // console.log(THREE_BALLS_ADDR)
+
+
+
+
+
+    const collectionData = {
+      21: {
+        minter: '0xF3963c766848765E799d88361d9a406f487B1E9c',
+        name: `Free21 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/21`,
+        ext: `.jpg`,
+        description: `Free of charge`
+      },
+      22: {
+        minter: '0x4aEcd54F82319d755397e35E18183ac678f1A650',
+        name: `Free22 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/22`,
+        ext: `.jpg`,
+        description: `If it's free, you are the product`
+      },
+      23: {
+        minter: '',
+        name: `Free23 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/23`,
+        ext: `.jpg`,
+        description: `Ladies drink free`
+      },
+      24: {
+        minter: '',
+        name: `Free24 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/24`,
+        ext: `.jpg`,
+        description: `Free time`
+      },
+      25: {
+        minter: '',
+        name: `Free25 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/25`,
+        ext: `.jpg`,
+        description: `Free Tibet`
+      },
+      26: {
+        minter: '',
+        name: `Free26 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/26`,
+        ext: `.jpg`,
+        description: `Free Taiwan`
+      },
+      27: {
+        minter: '',
+        name: `Free27 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/27`,
+        ext: `.jpg`,
+        description: `Free Palestine`
+      },
+      28: {
+        minter: '',
+        name: `Free28 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/28`,
+        ext: `.jpg`,
+        description: `Free for the taking`
+      },
+      29: {
+        minter: '',
+        name: `Free29 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/29`,
+        ext: `.jpg`,
+        description: `Free trade`
+      },
+      30: {
+        minter: '',
+        name: `Free30 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/30`,
+        ext: `.jpg`,
+        description: `Freewheeling`
+      },
+      31: {
+        minter: '',
+        name: `Free31 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/31`,
+        ext: `.jpg`,
+        description: `Free and easy`
+      },
+      32: {
+        minter: '',
+        name: `Free32 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/32`,
+        ext: `.jpg`,
+        description: `Free parking`
+      },
+      33: {
+        minter: '0x26C43C199d24C61612Af7703f1271A73aC36Fe76',
+        name: `Free33 #`,
+        url: `https://steviep.xyz/free`,
+        img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/33`,
+        ext: `.jpg`,
+        description: `Free throw`
+      }
+    }
+
+    const FREE_BASE_ADDR = '0x30b541f1182ef19c56a39634B2fdACa5a0F2A741'
+    const FREE_BASE_ABI = [
+      'function license() external view returns (string)',
+      `function createCollection(
+        address minter,
+        string calldata _namePrefix,
+        string calldata _externalUrl,
+        string calldata _imgUrl,
+        string calldata _imgExtension,
+        string calldata _description
+      ) external`
+    ]
+    const FreeBase = await provider.contract(FREE_BASE_ADDR, FREE_BASE_ABI)
+
+    const deployNumber = 21
+
+    if (!collectionData[deployNumber].minter) throw new Error('No addr for '+deployNumber)
+    await FreeBase.createCollection(
+      collectionData[deployNumber].minter,
+      collectionData[deployNumber].name,
+      collectionData[deployNumber].url,
+      collectionData[deployNumber].img,
+      collectionData[deployNumber].ext,
+      collectionData[deployNumber].description,
+    )
+
+
+  })
+
+</script>
+
+</html>

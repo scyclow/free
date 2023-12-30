@@ -110,10 +110,7 @@ contract Free30 is FreeChecker {
     _checkFree19TokenClaimer(free19TokenId);
     _checkFree19ContractClaimer();
 
-
-
     free19TokenIdUsed[free19TokenId] = true;
-
 
     postCheck(free0TokenId, 30, '30');
   }

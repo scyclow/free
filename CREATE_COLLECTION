@@ -1,0 +1,163 @@
+🆓🆓🆓🆓🆓🆓🆓🆓🆓🆓🆓🆓🆓
+🎉💥🎊NEW YEAR NEW FREE 🎊💥🎉
+🆓🆓🆓🆓🆓🆓🆓🆓🆓🆓🆓🆓🆓
+
+I'm happy to announce 13 new additions to Free, my ecosystem of smart contract art pieces, bringing the total collection size up to 33! (Along with a free bonus collection)
+
+👇👇👇👇👇👇👇👇👇👇
+
+
+
+
+Free started two years ago as a way to reward collectors of my work with free NFTs. But airdrops are boring and games are fun, so it quickly morphed into more of an obstacle course of interrelated smart contracts where each challenge stands alone as its own experience.
+
+
+
+
+All in all, Free has become a way for me to reflect on my year, experiment with radically stupid smart contract mechanics, and explore the nature of freeness.
+
+
+
+
+To start, you can mint a Free0 here. This is an open edition forever with zero restrictions, which will act as a sort of punchcard for the rest of the challenges. So while it's the easiest Free to acquire, it also has the potential to be the most valuable.
+https://etherscan.io/address/0x5e965a4b2b53aaecfab51368f064c98531947a26#writeContract
+
+
+
+
+Acquiring Free tokens will cost you time, gas, energy, collecting effort, and maybe some sleep. But what it won't involve is you paying me money. This is all pro bono.
+
+steviep.xyz/free indexes of all the Frees, but here's an overview of the 13 new challenges:
+
+
+
+
+
+Free21: This challenge is for Free0s used to mint Frees 8-20. First, send a qualifying Free0 to the contract. Then use another qualifying Free0 to rescue it. You might need a friend you can trust to help you out since you can't use smart contracts to help you out
+
+
+
+
+
+Free22: All you need is a Dopamine Machine that has been used to redeem a FastCash from the FastCashDopamineVault. You also need a Free0.
+
+
+
+
+
+Free23: This contract is locked unless there are at least 5 Dancing Man NFTs staked. As long as a dance part of this size is taking place, you can mint a Free23 with a combination of a Free22 and Free0 (both single use).
+
+
+
+
+
+Free24: You can only mint this (using a Free0) for 24 hours, once every 365 days. The first 24 hour interval starts Jan 2, 2024 midnight (EST). If you miss this, you'll need to wait 365 days for another chance.
+
+
+
+
+
+Free25: Holders of and Cold Hard Cash token that has been redeemed for its physical cash can set a minting address. As long as this minting address has a Free0 it can mint a Free25.
+
+
+
+
+
+Free26: This can only be minted while the "Have You Tried Turning It Off and On Again?" token is turned on. But every time you want to mint another Free26, you'll need to turn the OFFON token off, and then back on again. You may need to ask the OFFON owner for some help with this
+
+
+
+
+
+Free27: This can be minted by anyone with a #0 token from a Fiefdom contract (+ a Free0). As of now, only two fiefdoms have been activated, so most of these tokens are locked up.
+
+
+
+
+
+Free28: Along with a Free0, you need an MMO Prop15 White paper (single use). You also need Money Making Opportunity tokens that fulfill the following conditions: a token that voted for Prop15, an active token, and token that has made a proposal with at least 10 votes...
+
+
+
+
+
+... MMO tokens can be used to claim multiple Free28s, and can fulfill multiple conditions on a single Free28 mint, but cannot fulfill the same condition twice.
+
+
+
+
+
+Free29: This one's not for the faint of heart. First you need to stake your Free0. Then you need to claim/unstake within 256 blocks. The catch is that there's a certain % chance that your Free0 becomes locked up for 2900000 blocks. This % will oscillate over a cycle of 16 mints.
+
+
+
+
+
+Free30: This one's a little complicated. To mint a Free30 you need:
+1. An unused Free0
+2. An unused Free19
+3. The Free19 claimer role for at least 30 hours
+4. *Your* Free19 token's claimer role for at least 30 hours
+5. The Free30 claimer role for at least 30 hours...
+
+
+
+
+
+...You can get the Free30 claimer role by:
+1. Owning an unused Free19
+2. Having that Free19 token's claimer role for 30 hours
+3. Having the Free19 contract's claimer role for 30 hours
+4. You can't assign the role to yourself...
+
+
+
+
+
+You can set your Free19 token's claimer role by:
+1. Owning an unused Free19
+2. Having the Free19 contract's claimer role for 30 hours
+3. Once again, you can't assign the role to yourself
+
+
+
+
+
+To mint a Free19 + set the Free19 claimer role, you'll have to check out the Free19 contract. I'm also not sure that this description is 100% accurate, but I've written tests to verify that it is, in fact, possible to mint a Free30
+
+
+
+
+
+Free31: This one's nice and simple with low stakes. All you need to do is check in once a day for 31 days. Every checkin needs to be between 24 and 25 hours from your last checkin. Then you can mint with a Free0. If you miss a checkin, you just need to start over.
+
+
+
+
+
+Free32: To mint this one, you'll need to own between 0.50% and ~2.00% (but maybe more) of the total supply of all Free tokens. The exact percentage depends on the state of the Free19/Free30 claimer roles and the OFFON token, among other things. Read the contract for the exact %
+
+
+
+
+
+Free33: If you own a token from my recent GrailsV series, "three balls thrown in the air to get a straight line", you can throw your ball to a random coordinate on an imaginary 6x6 grid. If you can make a straight line with two other thrown balls, then you can mint a Free33...
+
+
+
+
+
+... Minting will take your ball off the 6x6 grid, but leave the other balls. Balls can also be used to mint multiple Free33s.
+
+
+
+
+
+BONUS: If you're having trouble visualizing where your ball is on the 6x6 grid, you can mint a FREE dynamic NFT to help map it out. Owners can choose up to three balls to map, and can toggle the color scheme between light and dark mode
+[SCREENSHOT]
+
+
+
+
+You can mint one of 333 Three Balls Grids for free here. You just to have the Free19 contract's claimer role for 30 minutes. If you want to mint multiples, then you'll need to wait 15 minutes between each mint.
+[ADD LINK]
