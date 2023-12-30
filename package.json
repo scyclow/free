@@ -11,7 +11,8 @@
     "deploy": "hardhat run --network localhost scripts/deploy.js",
     "deploy:rinkeby": "npx hardhat run scripts/deploy.js --network rinkeby",
     "deploy:token:rinkeby": "npx hardhat run scripts/deployToken.js --network rinkeby",
-    "network": "npx hardhat node"
+    "network": "npx hardhat node",
+    "startSVGServer": "node ./svgServer/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -23,6 +24,7 @@
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.4",
+    "express": "^4.18.2",
     "hardhat": "^2.19.2",
     "hardhat-gas-reporter": "^1.0.4",
     "web3": "^1.6.1"

@@ -1258,7 +1258,7 @@ describe.only('Free Series 3', () => {
     })
   })
 
-  describe.only('Free33', () => {
+  describe('Free33', () => {
     let grailsDeployer, thrower
     beforeEach(async () => {
       await deployFrees()
@@ -1291,6 +1291,13 @@ describe.only('Free Series 3', () => {
       expect(bnToN(await Free33.connect(grailsDeployer).ballX(12))).to.not.equal(0)
       expect(bnToN(await Free33.connect(grailsDeployer).ballY(12))).to.not.equal(0)
 
+      const coords = await Free33.connect(grailsDeployer).ballCoords(12)
+      expect(bnToN(coords.x)).to.not.equal(0)
+      expect(bnToN(coords.y)).to.not.equal(0)
+      console.log(coords)
+
+
+
     })
 
     it('should know whether its a line or not', async () => {
@@ -1317,7 +1324,7 @@ describe.only('Free Series 3', () => {
       expect(await Free33.connect(grailsDeployer).isLine([7,7], [1,1], [1,1])).to.equal(false)
     })
 
-    it.only('should claim', async () => {
+    it('should claim', async () => {
       await expectRevert(
         Free33.connect(steviep).claim(0, 12, 30, 36),
         'Not owner of ball'
@@ -1431,6 +1438,120 @@ describe.only('Free Series 3', () => {
       expect(bnToN(await Free33.connect(grailsDeployer).ballX(30))).to.not.equal(0)
       expect(bnToN(await Free33.connect(grailsDeployer).ballY(30))).to.not.equal(0)
     })
+  })
+
+  describe.only('ThreeBallsGrid', () => {
+    let GrailsV, Free19, grailsDeployer, thrower
+    beforeEach(async () => {
+      await deployFrees()
+      GrailsV = await ethers.getContractAt(
+        ['function ownerOf(uint256 tokenId) external view returns (address owner)'],
+        '0x92A50Fe6eDE411BD26e171B97472e24D245349B8'
+      )
+
+      Free19 = await ethers.getContractAt(
+        ['function assign(address) external'],
+        '0xaBCeF3a4aDC27A6c962b4fC17181F47E62244EF0'
+      )
+
+      grailsDeployer = await ethers.getImpersonatedSigner('0x686BD755B9396e93Eb924Da11F78f3c92076494E')
+      thrower = await ethers.getImpersonatedSigner('0x6Eaa184BafE79b7E5DCBc432E85947C99b7402C5')
+
+
+      const ThreeBallsGridFactory = await ethers.getContractFactory('ThreeBallsGrid', steviep)
+      ThreeBallsGrid = await ThreeBallsGridFactory.attach(
+        await Free33.connect(steviep).threeBallsGrid()
+      )
+
+      const ThreeBallsGridMinterFactory = await ethers.getContractFactory('ThreeBallsGridMinter', steviep)
+      ThreeBallsGridMinter = await ThreeBallsGridMinterFactory.attach(
+        await ThreeBallsGrid.connect(steviep).minter()
+      )
+
+      const ThreeBallsGridURIFactory = await ethers.getContractFactory('ThreeBallsGridURI', steviep)
+      ThreeBallsGridURI = await ThreeBallsGridURIFactory.attach(
+        await ThreeBallsGrid.connect(steviep).tokenURIContract()
+      )
+    })
+
+
+    it('should deploy properly', async () => {
+      expect(await ThreeBallsGrid.connect(steviep).owner()).to.equal(steviep.address)
+      expect(await ThreeBallsGrid.connect(steviep).ownerOf(0)).to.equal(steviep.address)
+      expect(bnToN(await ThreeBallsGrid.connect(steviep).totalSupply())).to.equal(1)
+
+      await ThreeBallsGrid.connect(steviep).setBalls(0, 12, 30, 36)
+
+      const balls = await ThreeBallsGrid.connect(steviep).tokenIdToBalls(0)
+      expect(bnToN(balls.a)).to.equal(12)
+      expect(bnToN(balls.b)).to.equal(30)
+      expect(bnToN(balls.c)).to.equal(36)
+
+      await expectRevert(
+        ThreeBallsGrid.connect(notMinter).setBalls(0, 12, 30, 36),
+        'Must own token'
+      )
+
+      await expectRevert.unspecified(
+        ThreeBallsGrid.connect(notMinter).update()
+      )
+    })
+
+    it('should mint correctly', async () => {
+      await expectRevert(
+        ThreeBallsGridMinter.connect(steviep).mint(),
+        'Must be Free19 contract claimer'
+      )
+
+      await Free19.connect(steviep).assign(steviep.address)
+
+      await expectRevert(
+        ThreeBallsGridMinter.connect(steviep).mint(),
+        'Must be Free19 contract claimer for > 30 minutes'
+      )
+
+
+      await time.increase(time.duration.minutes(30))
+
+      await ThreeBallsGridMinter.connect(steviep).mint()
+
+      expect(bnToN(await ThreeBallsGrid.connect(steviep).totalSupply())).to.equal(2)
+
+      await expectRevert(
+        ThreeBallsGridMinter.connect(steviep).mint(),
+        'Must wait at least 15 minutes between mints'
+      )
+      await time.increase(time.duration.minutes(15))
+      await ThreeBallsGridMinter.connect(steviep).mint()
+
+      expect(bnToN(await ThreeBallsGrid.connect(steviep).totalSupply())).to.equal(3)
+      await time.increase(time.duration.minutes(30))
+
+      await Free19.connect(notMinter).assign(notMinter.address)
+
+      await expectRevert(
+        ThreeBallsGridMinter.connect(steviep).mint(),
+        'Must be Free19 contract claimer'
+      )
+
+    })
+
+    it('should only allow 333 mints', async () => {
+      await Free19.connect(steviep).assign(steviep.address)
+      await time.increase(time.duration.minutes(30))
+
+      for (let i = 0; i < 332; i++) {
+        await ThreeBallsGridMinter.connect(steviep).mint()
+        await time.increase(time.duration.minutes(15))
+      }
+      expect(bnToN(await ThreeBallsGrid.connect(steviep).totalSupply())).to.equal(333)
+      await expectRevert(
+        ThreeBallsGridMinter.connect(steviep).mint(),
+        'Cannot exceed 333'
+      )
+
+    })
+    // it should only allow 333 mints
   })
 })
 

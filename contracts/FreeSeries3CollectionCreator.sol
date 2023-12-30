@@ -38,7 +38,7 @@ contract FreeSeries3CollectionCreator {
     require(msg.sender == steviep);
 
     string memory url = 'https://steviep.xyz/free';
-    string memory imrUrl = 'ipfs://.................................../';
+    string memory imrUrl = 'ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/';
     string memory extension = '.jpg';
 
     free.createCollection(freeAddrs[0], 'Free21 #', url, string(abi.encodePacked(imrUrl, '21')), extension, "Free of charge");

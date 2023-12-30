@@ -45,14 +45,14 @@ import "./FreeChecker.sol";
 
 
 contract Free24 is FreeChecker {
-  uint256 public deployTime;
+  uint256 public startTime;
 
   constructor() {
-    deployTime = block.timestamp;
+    startTime = 1704171600;
   }
 
   function mintDay(uint256 timestamp) public view returns (bool) {
-    uint256 timeDiffDays = (timestamp - deployTime) / 24 hours;
+    uint256 timeDiffDays = (timestamp - startTime) / 24 hours;
     return timeDiffDays % 365 == 0;
   }
 

@@ -42,7 +42,7 @@ pragma solidity ^0.8.23;
 
 
 import "./FreeChecker.sol";
-import "hardhat/console.sol";
+import "./ThreeBallsGrid.sol";
 
 interface GrailsV {
   function ownerOf(uint256 tokenId) external returns (address owner);
@@ -50,8 +50,10 @@ interface GrailsV {
 
 
 contract Free33 is FreeChecker {
-  mapping(uint256 => bool) public THREE_BALLS;
+  ThreeBallsGrid public threeBallsGrid;
   GrailsV public grailsV = GrailsV(0x92A50Fe6eDE411BD26e171B97472e24D245349B8);
+  mapping(uint256 => bool) public THREE_BALLS;
+
   mapping(uint256 => uint256) public ballX;
   mapping(uint256 => uint256) public ballY;
 
@@ -92,10 +94,13 @@ contract Free33 is FreeChecker {
     THREE_BALLS[99] = true;
     THREE_BALLS[101] = true;
     THREE_BALLS[102] = true;
+
+    threeBallsGrid = new ThreeBallsGrid(msg.sender);
   }
 
-
-
+  function ballCoords(uint256 tokenId) external view returns (uint256 x, uint256 y) {
+    return (ballX[tokenId], ballY[tokenId]);
+  }
 
   function throwBall(uint256 grailsVTokenId) external {
     require(grailsV.ownerOf(grailsVTokenId) == msg.sender, 'Only owner can throw');
@@ -107,11 +112,7 @@ contract Free33 is FreeChecker {
 
     ballX[grailsVTokenId] = 1 + hash % 6;
     ballY[grailsVTokenId] = 1 + (hash / 100000) % 6;
-  }
-
-
-  function ballCoords(uint256 tokenId) external view returns (uint256, uint256) {
-    return (ballX[tokenId], ballY[tokenId]);
+    threeBallsGrid.update();
   }
 
   function isLine(
@@ -171,7 +172,6 @@ contract Free33 is FreeChecker {
     );
   }
 
-
   function claim(
     uint256 free0TokenId,
     uint256 ownedBallTokenId,
@@ -188,7 +188,6 @@ contract Free33 is FreeChecker {
       'Invalid supporting balls'
     );
 
-
     require(isLine(
         [int(ballX[ownedBallTokenId]), int(ballY[ownedBallTokenId])],
         [int(ballX[supportingBallTokenId1]), int(ballY[supportingBallTokenId1])],
@@ -197,11 +196,9 @@ contract Free33 is FreeChecker {
       'Balls not thrown in a straight line'
     );
 
-
     ballX[ownedBallTokenId] = 0;
     ballY[ownedBallTokenId] = 0;
 
     postCheck(free0TokenId, 33, '33');
   }
-
 }
