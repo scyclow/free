@@ -72,7 +72,7 @@
         description: `Free of charge`
       },
       22: {
-        minter: '0x4aEcd54F82319d755397e35E18183ac678f1A650',
+        minter: '0x82d87C0D9b1E92d6317E20778187F6472ab9ab18',
         name: `Free22 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/22`,
@@ -80,7 +80,7 @@
         description: `If it's free, you are the product`
       },
       23: {
-        minter: '',
+        minter: '0x4aEcd54F82319d755397e35E18183ac678f1A650',
         name: `Free23 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/23`,
@@ -88,7 +88,7 @@
         description: `Ladies drink free`
       },
       24: {
-        minter: '',
+        minter: '0xFB4Bf03Fe72e26b78574d90454cc6C53Ad41b877',
         name: `Free24 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/24`,
@@ -96,7 +96,7 @@
         description: `Free time`
       },
       25: {
-        minter: '',
+        minter: '0xc16aEb0DB5a912be921b2506be6Dc18dD3ac8424',
         name: `Free25 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/25`,
@@ -104,7 +104,7 @@
         description: `Free Tibet`
       },
       26: {
-        minter: '',
+        minter: '0x3C0875df8EA7dFB7c516312c062f9eDfcB94D6E7',
         name: `Free26 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/26`,
@@ -112,7 +112,7 @@
         description: `Free Taiwan`
       },
       27: {
-        minter: '',
+        minter: '0xEb276066D82D7a55546917f474614FFDedaC97dd',
         name: `Free27 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/27`,
@@ -120,7 +120,7 @@
         description: `Free Palestine`
       },
       28: {
-        minter: '',
+        minter: '0x7F012fb4Bc0EC8ceb8d035C6CECC34237886193F',
         name: `Free28 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/28`,
@@ -128,7 +128,7 @@
         description: `Free for the taking`
       },
       29: {
-        minter: '',
+        minter: '0x00785d54610A3686775AefB50A44C85267AF1754',
         name: `Free29 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/29`,
@@ -136,7 +136,7 @@
         description: `Free trade`
       },
       30: {
-        minter: '',
+        minter: '0xBADBd0FC01696f071D3c4b081Ca33cB923D22d27',
         name: `Free30 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/30`,
@@ -144,7 +144,7 @@
         description: `Freewheeling`
       },
       31: {
-        minter: '',
+        minter: '0x44CDB213521e0845e25Fd95EC491e5aCf2c5fE7f',
         name: `Free31 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/31`,
@@ -152,7 +152,7 @@
         description: `Free and easy`
       },
       32: {
-        minter: '',
+        minter: '0xCC8762B4b73F1fBE5369DA26830744f9Be0daFFd',
         name: `Free32 #`,
         url: `https://steviep.xyz/free`,
         img: `ipfs://QmSV8dkHDYxGLBkex8MKdV5eNEUt2wcMPS4Jf8yNHaqxhu/32`,
@@ -171,7 +171,9 @@
 
     const FREE_BASE_ADDR = '0x30b541f1182ef19c56a39634B2fdACa5a0F2A741'
     const FREE_BASE_ABI = [
+      'function collectionIdToMinter(uint) external view returns (address)',
       'function license() external view returns (string)',
+      'function setMintingAddress(uint256,address) external',
       `function createCollection(
         address minter,
         string calldata _namePrefix,
@@ -183,17 +185,52 @@
     ]
     const FreeBase = await provider.contract(FREE_BASE_ADDR, FREE_BASE_ABI)
 
-    const deployNumber = 21
 
-    if (!collectionData[deployNumber].minter) throw new Error('No addr for '+deployNumber)
-    await FreeBase.createCollection(
-      collectionData[deployNumber].minter,
-      collectionData[deployNumber].name,
-      collectionData[deployNumber].url,
-      collectionData[deployNumber].img,
-      collectionData[deployNumber].ext,
-      collectionData[deployNumber].description,
-    )
+    const FREE_22_ADDR = '0x30b541f1182ef19c56a39634B2fdACa5a0F2A741'
+    const FREE_22_ABI = [
+      'function collectionIdToMinter(uint) external view returns (address)',
+      'function license() external view returns (string)',
+      'function setMintingAddress(uint256,address) external',
+      `function createCollection(
+        address minter,
+        string calldata _namePrefix,
+        string calldata _externalUrl,
+        string calldata _imgUrl,
+        string calldata _imgExtension,
+        string calldata _description
+      ) external`
+    ]
+
+    // console.log(await FreeBase.collectionIdToMinter(22))
+
+    console.log(await FreeBase.collectionIdToMinter(21), collectionData[21].minter)
+    console.log(await FreeBase.collectionIdToMinter(22), collectionData[22].minter)
+    console.log(await FreeBase.collectionIdToMinter(23), collectionData[23].minter)
+    console.log(await FreeBase.collectionIdToMinter(24), collectionData[24].minter)
+    console.log(await FreeBase.collectionIdToMinter(25), collectionData[25].minter)
+    console.log(await FreeBase.collectionIdToMinter(26), collectionData[26].minter)
+    console.log(await FreeBase.collectionIdToMinter(27), collectionData[27].minter)
+    console.log(await FreeBase.collectionIdToMinter(28), collectionData[28].minter)
+    console.log(await FreeBase.collectionIdToMinter(29), collectionData[29].minter)
+    console.log(await FreeBase.collectionIdToMinter(30), collectionData[30].minter)
+    console.log(await FreeBase.collectionIdToMinter(31), collectionData[31].minter)
+    console.log(await FreeBase.collectionIdToMinter(32), collectionData[32].minter)
+    console.log(await FreeBase.collectionIdToMinter(33), collectionData[33].minter)
+    console.log(await FreeBase.collectionIdToMinter(34), '0x0')
+
+
+    // const deployNumber = 33
+
+    // if (!collectionData[deployNumber].minter) throw new Error('No addr for '+deployNumber)
+    // await FreeBase.createCollection(
+    //   collectionData[deployNumber].minter,
+    //   collectionData[deployNumber].name,
+    //   collectionData[deployNumber].url,
+    //   collectionData[deployNumber].img,
+    //   collectionData[deployNumber].ext,
+    //   collectionData[deployNumber].description,
+    // )
+
 
 
   })
