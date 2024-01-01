@@ -27,7 +27,7 @@ contract Free33Mock {
       return (5,5);
     }
   }
-  function isLine(uint256, uint256, uint256) external pure returns (bool) {
+  function isLine(int[2] calldata, int[2] calldata, int[2] calldata) external pure returns (bool) {
     return true;
   }
 }
